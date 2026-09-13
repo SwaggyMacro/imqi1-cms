@@ -38,4 +38,4 @@ mv "$TMP" "$TARGET"
 
 echo "✓ 已导出到 $TARGET"
 echo "  buildHash: $HASH"
-echo "  用法：上传整个 $TARGET 目录到 CDN 的 static/ 下（最终路径 static/<hash>/）"
+echo "  用法：将 dist 目录下的 $HASH 目录上传到 CDN 的 static/ 下（最终路径 static/<hash>/）"

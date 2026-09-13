@@ -218,6 +218,9 @@ onMounted(() => {
         <span class="max-md:hidden"
           >· <NuxtLink aria-label="本主题已开源于 GitHub" to="https://github.com/imqi1-github/imqi1-cms" target="_blank" class="hover:underline">主题</NuxtLink></span
         >
+        <span class="max-md:hidden"
+          >· <NuxtLink aria-label="查看项目文档" to="https://docs.qi1.website" target="_blank" class="hover:underline">文档</NuxtLink></span
+        >
         <span v-if="siteIcp && isHomePage" class="max-md:hidden"
           >│ <NuxtLink class="hover:underline" to="https://beian.miit.gov.cn/" target="_blank">{{ siteIcp }}</NuxtLink></span
         >

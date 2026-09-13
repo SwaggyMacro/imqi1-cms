@@ -6,6 +6,9 @@ contact_links:
   - name: 📖 项目介绍
     url: https://github.com/imqi1-github/imqi1-cms#readme
     about: 查看 README——环境搭建、部署、功能说明
+  - name: 📘 项目文档
+    url: https://docs.qi1.website
+    about: 查阅完整文档——多数部署与使用问题在此已有答案
   - name: 🌐 线上站点 imqi1.com
     url: https://imqi1.com
     about: 查看在线演示与真实使用效果

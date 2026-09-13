@@ -6,6 +6,8 @@
 [![bun](https://img.shields.io/badge/bun-1.4-f472b6?logo=bun&logoColor=white)](https://bun.sh)
 [![uni-app](https://img.shields.io/badge/uni--app-H5%2FWeChat%2FAlipay-1685a5?logo=vuedotjs&logoColor=white)](mini)
 
+预览：[https://imqi1.com](https://imqi1.com) · 文档：[https://docs.qi1.website](https://docs.qi1.website)
+
 ## 目录
 
 - [项目介绍](#项目介绍)
@@ -37,8 +39,6 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
 - **特色模块**：RSS 订阅源聚合、旅行足迹地图（高德地图）、访客 IP 地理分布、附件管理（本地 / 腾讯云 COS 双存储）。
 - **管理后台**：`/admin` 下提供文章、分类、标签、评论、友链、订阅、旅行、用户、附件、站点设置等全套可视化管理。
 - **工程与部署**：PWA 离线支持、CDN 静态资源分发与版本化、生产环境安全响应头（CSP / HSTS 等），并附带数据库初始化、资源上传、Nginx 配置生成等一系列运维脚本。
-
-预览：[https://imqi1.com](https://imqi1.com)
 
 ## 开发环境搭建
 
@@ -728,7 +728,8 @@ type ChangelogItem = {
 
 欢迎参与！无论是提 Issue、提交代码，还是反馈使用问题，都很有价值。请先看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解环境与约定。
 
-- **报告 Bug / 提需求**：使用 [Issue 模板](https://github.com/imqi1-github/imqi1-cms/issues/new/choose) 提交。
+- **查看文档**：[docs.qi1.website](https://docs.qi1.website)——多数部署与使用问题在文档里已有答案。
+- **报告 Bug / 提需求**：使用 [Issue 模板](https://github.com/imqi1-github/imqi1-cms/issues/new/choose) 提交，模板已要求确认「问题与本项目相关、文档无对应说明」，**与本项目无关的问题请勿在此提交**（通用浏览器/系统问题、第三方服务问题、个人项目托管问题等，请到对应上游反馈）。
 - **提交代码**：从 `master` 拉分支，自测通过（`bunx eslint .` / `bunx nuxi typecheck` / `bun run tailwindcss:lint`）后提 PR。
 - **安全相关**：疑似漏洞请**私密**报告（仓库 → Security → Report a vulnerability），别在公开 Issue 披露——见 [SECURITY.md](SECURITY.md)。
 

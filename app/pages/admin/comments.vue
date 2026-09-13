@@ -222,9 +222,11 @@ async function saveEdit() {
     });
     editDialogOpen.value = false;
     await fetchComments(pagination.value.page, false);
-  } catch {
+  } catch (error) {
     toast.error({
       message: "更新失败",
+      error,
+      description: "请稍后重试",
     });
   } finally {
     saving.value = false;
@@ -249,9 +251,11 @@ async function setStatus(coid: number, status: number) {
     toast.success({
       message: "状态已更新",
     });
-  } catch {
+  } catch (error) {
     toast.error({
       message: "操作失败",
+      error,
+      description: "请稍后重试",
     });
   }
 }
@@ -278,9 +282,11 @@ async function deleteComment(coid: number) {
       toast.success({
         message: "评论已删除",
       });
-    } catch {
+    } catch (error) {
       toast.error({
         message: "删除失败",
+        error,
+        description: "请稍后重试",
       });
     }
   }

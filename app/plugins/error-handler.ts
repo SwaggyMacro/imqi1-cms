@@ -38,9 +38,12 @@ export default defineNuxtPlugin(nuxtApp => {
         err.message || err.data?.message || err.response?._data?.message || err.statusMessage || `请求失败: ${err.statusCode || err.status || 500}`;
     }
 
-    // 显示错误 toast（仅客户端）
+    // 显示错误 toast（仅客户端）；message 可能很长，丢到 description 由 useToast 截断到 2 行
     if (typeof window !== "undefined") {
-      toast.error({ message });
+      toast.error({
+        message: "请求出错",
+        description: message,
+      });
     }
   };
 

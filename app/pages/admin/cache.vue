@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { CsrfResponse } from "~/types/apis/admin/categories";
-import type { ApiError } from "~/types/error";
 import type { CacheClearBody, CacheClearResponse } from "~/types/apis/cache";
 
 definePageMeta({
@@ -73,8 +72,7 @@ async function clearAll() {
   try {
     await postClear({ csrfToken: csrfToken.value, action: "all" }, "已清空全部缓存");
   } catch (rawError: unknown) {
-    const error = rawError as ApiError;
-    toast.error({ message: "清空失败", description: error?.data?.message || "请稍后重试" });
+    toast.error({ message: "清空失败", error: rawError, description: "请稍后重试" });
   } finally {
     clearingAll.value = false;
   }
@@ -89,8 +87,7 @@ async function clearPreset(keyword: string, label: string) {
   try {
     await postClear({ csrfToken: csrfToken.value, action: "preset", value: keyword }, `已清理${label}缓存`);
   } catch (rawError: unknown) {
-    const error = rawError as ApiError;
-    toast.error({ message: "清理失败", description: error?.data?.message || "请稍后重试" });
+    toast.error({ message: "清理失败", error: rawError, description: "请稍后重试" });
   } finally {
     clearingPreset.value = null;
   }
@@ -105,8 +102,7 @@ async function clearSearchCache() {
   try {
     await postClear({ csrfToken: csrfToken.value, action: "search" }, "已清除搜索缓存");
   } catch (rawError: unknown) {
-    const error = rawError as ApiError;
-    toast.error({ message: "清理失败", description: error?.data?.message || "请稍后重试" });
+    toast.error({ message: "清理失败", error: rawError, description: "请稍后重试" });
   } finally {
     clearingSearch.value = false;
   }
@@ -121,8 +117,7 @@ async function clearFootprint() {
   try {
     await postClear({ csrfToken: csrfToken.value, action: "footprint" }, "已清除足迹缓存");
   } catch (rawError: unknown) {
-    const error = rawError as ApiError;
-    toast.error({ message: "清理失败", description: error?.data?.message || "请稍后重试" });
+    toast.error({ message: "清理失败", error: rawError, description: "请稍后重试" });
   } finally {
     clearingFootprint.value = false;
   }
@@ -142,8 +137,7 @@ async function clearKeyword() {
   try {
     await postClear({ csrfToken: csrfToken.value, action: "keyword", value: keyword }, "已清理匹配缓存");
   } catch (rawError: unknown) {
-    const error = rawError as ApiError;
-    toast.error({ message: "清理失败", description: error?.data?.message || "请稍后重试" });
+    toast.error({ message: "清理失败", error: rawError, description: "请稍后重试" });
   } finally {
     clearingKeyword.value = false;
   }

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { CsrfResponse } from "~/types/apis/admin/categories";
 import type { TagItem } from "~/types/apis/admin/tags";
-import type { ApiError } from "~/types/error";
 
 const router = useRouter();
 const toast = useToast();
@@ -55,10 +54,10 @@ async function addTag() {
     toast.success({ message: "标签创建成功" });
     await fetchTags();
   } catch (rawError: unknown) {
-    const error = rawError as ApiError;
     toast.error({
       message: "添加失败",
-      description: error?.data?.message || "请稍后重试",
+      error: rawError,
+      description: "请稍后重试",
     });
   } finally {
     submitting.value = false;
@@ -136,10 +135,10 @@ async function updateTag() {
       editTagForm.value = { name: "", slug: "", desc: "" };
     });
   } catch (rawError: unknown) {
-    const error = rawError as ApiError;
     toast.error({
       message: "更新失败",
-      description: error?.data?.message || "请稍后重试",
+      error: rawError,
+      description: "请稍后重试",
     });
   } finally {
     submitting.value = false;
@@ -167,10 +166,10 @@ async function deleteTag(mid: number) {
       toast.success({ message: "标签删除成功" });
       await fetchTags();
     } catch (rawError: unknown) {
-      const error = rawError as ApiError;
       toast.error({
         message: "删除失败",
-        description: error?.data?.message || "请稍后重试",
+        error: rawError,
+        description: "请稍后重试",
       });
     }
   }

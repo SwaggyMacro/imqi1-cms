@@ -65,6 +65,8 @@ const fetchAttachments = async () => {
     console.error("获取附件列表失败:", error);
     toast.error({
       message: "获取附件列表失败",
+      error,
+      description: "请稍后重试",
     });
   } finally {
     if (seq === fetchSeq) loading.value = false;
@@ -206,9 +208,10 @@ const uploadFiles = async (files: File[], options: AttachmentUploadOptions = {})
             description: file.name,
           });
         }
-      } catch {
+      } catch (error) {
         toast.error({
           message: isLivePhoto ? "实况照片上传失败" : "上传失败",
+          error,
           description: file.name,
         });
       }
@@ -262,6 +265,8 @@ async function deleteAttachment(item: AttachmentItem) {
     console.error("删除附件失败:", error);
     toast.error({
       message: "删除失败",
+      error,
+      description: "请稍后重试",
     });
   }
 }

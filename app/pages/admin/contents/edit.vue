@@ -529,12 +529,10 @@ const fetchContent = async () => {
       saveInitialContent();
     }
   } catch (e: unknown) {
-    const msg = e && typeof e === "object" && "data" in e && e.data && typeof e.data === "object" && "message" in e.data
-      ? String(e.data.message)
-      : (e instanceof Error ? e.message : "请稍后重试");
     toast.error({
       message: "获取文章失败",
-      description: msg,
+      error: e,
+      description: "请稍后重试",
     });
   } finally {
     loading.value = false;
@@ -762,12 +760,10 @@ async function saveContent(source: "manual" | "autosave"): Promise<SaveResult> {
       } catch (relationError) {
         relationSaveOk = false;
         if (source === "manual") {
-          const msg = relationError && typeof relationError === "object" && "data" in relationError && relationError.data && typeof relationError.data === "object" && "message" in relationError.data
-            ? String(relationError.data.message)
-            : (relationError instanceof Error ? relationError.message : "请稍后重试");
           toast.error({
             message: "文章已保存，但分类/标签保存失败，请重试",
-            description: msg,
+            error: relationError,
+            description: "请稍后重试",
           });
         }
       }
@@ -796,7 +792,8 @@ async function saveContent(source: "manual" | "autosave"): Promise<SaveResult> {
     if (source === "manual") {
       toast.error({
         message: "保存失败",
-        description: msg,
+        error: e,
+        description: "请稍后重试",
       });
     }
     return { status: "error", message: msg };

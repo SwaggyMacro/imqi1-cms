@@ -51,6 +51,8 @@ async function addLink() {
     console.error("添加失败:", error);
     toast.error({
       message: "添加失败",
+      error,
+      description: "请稍后重试",
     });
   } finally {
     submitting.value = false;
@@ -77,6 +79,8 @@ async function toggleEnabled(link: LinkItem) {
     console.error("操作失败:", error);
     toast.error({
       message: "操作失败",
+      error,
+      description: "请稍后重试",
     });
   } finally {
     togglingId.value = null;
@@ -116,6 +120,8 @@ async function saveEdit() {
     console.error("更新失败:", error);
     toast.error({
       message: "更新失败",
+      error,
+      description: "请稍后重试",
     });
   } finally {
     submitting.value = false;
@@ -148,6 +154,8 @@ async function deleteLink(id: number) {
       console.error("删除失败:", error);
       toast.error({
         message: "删除失败",
+        error,
+        description: "请稍后重试",
       });
     }
   }
@@ -188,6 +196,8 @@ async function approveModification(link: LinkItem, approve: boolean) {
       console.error(`${action}失败:`, error);
       toast.error({
         message: `${action}失败`,
+        error,
+        description: "请稍后重试",
       });
     }
   }

@@ -518,7 +518,11 @@ async function savePage(source: "manual" | "autosave"): Promise<SaveResult> {
     }
     const message = error?.data?.message || error?.message || "保存失败";
     if (source === "manual") {
-      toast.error({ message });
+      toast.error({
+        message: "保存失败",
+        error: rawError,
+        description: "请稍后重试",
+      });
     }
     return { status: "error", message };
   } finally {

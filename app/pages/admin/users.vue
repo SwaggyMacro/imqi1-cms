@@ -65,7 +65,8 @@ async function fetchUser() {
     loadError.value = error?.data?.message || '加载失败，请稍后重试'
     toast.error({
       message: '获取账户失败',
-      description: error?.data?.message || '请稍后重试',
+      error: rawError,
+      description: '请稍后重试',
     })
   } finally {
     loading.value = false
@@ -96,11 +97,11 @@ async function saveUser() {
     // 留在本页，刷新数据
     await fetchUser()
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    console.error('更新失败:', error)
+    console.error('更新失败:', rawError)
     toast.error({
       message: '更新失败',
-      description: error?.data?.message || '请稍后重试',
+      error: rawError,
+      description: '请稍后重试',
     })
   } finally {
     saving.value = false
@@ -145,8 +146,7 @@ async function enable2FA() {
     twoFactor.value = { enabled: false, pendingSetup: true }
     twoFACode.value = ''
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    toast.error({ message: '启用失败', description: error?.data?.message || '请稍后重试' })
+    toast.error({ message: '启用失败', error: rawError, description: '请稍后重试' })
   } finally {
     twoFABusy.value = false
   }
@@ -168,8 +168,7 @@ async function confirmEnable() {
     twoFACode.value = ''
     await fetchTwoFactorStatus()
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    toast.error({ message: '确认失败', description: error?.data?.message || '请重新输入' })
+    toast.error({ message: '确认失败', error: rawError, description: '请重新输入' })
   } finally {
     twoFABusy.value = false
   }
@@ -191,8 +190,7 @@ async function disable2FA() {
     twoFACode.value = ''
     await fetchTwoFactorStatus()
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    toast.error({ message: '停用失败', description: error?.data?.message || '请重新输入' })
+    toast.error({ message: '停用失败', error: rawError, description: '请重新输入' })
   } finally {
     twoFABusy.value = false
   }
@@ -226,8 +224,7 @@ async function revokeDevice(id: number) {
     toast.success({ message: '已撤回该设备' })
     await fetchTrustedDevices()
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    toast.error({ message: '撤回失败', description: error?.data?.message || '请稍后重试' })
+    toast.error({ message: '撤回失败', error: rawError, description: '请稍后重试' })
   } finally {
     devicesBusy.value = null
   }
@@ -262,8 +259,7 @@ async function saveRename() {
     if (target) target.name = newName
     await fetchTrustedDevices()
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    toast.error({ message: '重命名失败', description: error?.data?.message || '请稍后重试' })
+    toast.error({ message: '重命名失败', error: rawError, description: '请稍后重试' })
   } finally {
     devicesBusy.value = null
   }

@@ -256,7 +256,8 @@ const handleLogin = async () => {
     } else {
       toast.error({
         message: '登录失败',
-        description: e?.data?.message || '请检查用户名和密码',
+        error: e,
+        description: '请检查用户名和密码',
       })
       // 失败后该 IP 进入验证码模式，刷新一次配置
       try {
@@ -304,7 +305,8 @@ const handleVerify2FA = async () => {
     const e = rawError as ApiError
     toast.error({
       message: '验证失败',
-      description: e?.data?.message || '请重新输入动态验证码',
+      error: rawError,
+      description: '请重新输入动态验证码',
     })
     // challenge 过期等情况回退到第一步
     if (e?.data?.message?.includes('过期')) {

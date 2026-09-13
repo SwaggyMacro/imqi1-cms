@@ -6,7 +6,6 @@ import type {
     CategoryUpdateResponse,
     CsrfResponse,
 } from "~/types/apis/admin/categories";
-import type { ApiError } from "~/types/error";
 
 const router = useRouter();
 const toast = useToast();
@@ -60,17 +59,10 @@ async function addCategory() {
     toast.success({ message: "分类创建成功" });
     await fetchCategories();
   } catch (rawError: unknown) {
-    const error = rawError as ApiError;
-    console.error("添加失败:", error);
-
-    let errorMessage = "添加失败";
-    if (error?.data?.message) {
-      errorMessage = error.data.message;
-    } else if (error?.message) {
-      errorMessage = error.message;
-    }
+    console.error("添加失败:", rawError);
     toast.error({
-      message: errorMessage,
+      message: "添加失败",
+      error: rawError,
       description: "请稍后重试",
     });
   } finally {
@@ -122,16 +114,10 @@ async function updateCategory() {
     toast.success({ message: "分类更新成功" });
     await fetchCategories();
   } catch (rawError: unknown) {
-    const error = rawError as ApiError;
-    console.error("更新失败:", error);
-    let errorMessage = "更新失败";
-    if (error?.data?.message) {
-      errorMessage = error.data.message;
-    } else if (error?.message) {
-      errorMessage = error.message;
-    }
+    console.error("更新失败:", rawError);
     toast.error({
-      message: errorMessage,
+      message: "更新失败",
+      error: rawError,
       description: "请稍后重试",
     });
   } finally {
@@ -169,16 +155,10 @@ async function deleteCategory(mid: number) {
       toast.success({ message: "分类删除成功" });
       await fetchCategories();
     } catch (rawError: unknown) {
-      const error = rawError as ApiError;
-      console.error("删除失败:", error);
-      let errorMessage = "删除失败";
-      if (error?.data?.message) {
-        errorMessage = error.data.message;
-      } else if (error?.message) {
-        errorMessage = error.message;
-      }
+      console.error("删除失败:", rawError);
       toast.error({
-        message: errorMessage,
+        message: "删除失败",
+        error: rawError,
         description: "请稍后重试",
       });
     }

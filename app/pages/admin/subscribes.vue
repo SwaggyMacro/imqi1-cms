@@ -90,6 +90,8 @@ async function addSubscribe() {
     console.error("添加失败:", error);
     toast.error({
       message: "添加失败",
+      error,
+      description: "请稍后重试",
     });
   } finally {
     submitting.value = false;
@@ -122,6 +124,8 @@ async function deleteSubscribe(id: number) {
     console.error("删除失败:", error);
     toast.error({
       message: "删除失败",
+      error,
+      description: "请稍后重试",
     });
   }
 }
@@ -207,6 +211,8 @@ async function updateSubscribe() {
     console.error("修改失败:", error);
     toast.error({
       message: "修改失败",
+      error,
+      description: "请稍后重试",
     });
   } finally {
     saveUpdating.value = false;

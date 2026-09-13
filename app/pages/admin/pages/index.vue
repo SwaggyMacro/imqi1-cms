@@ -170,7 +170,11 @@ async function deletePage(cid: number) {
       toast.success({ message: "页面已删除" });
     } catch (error) {
       console.error("删除失败:", error);
-      toast.error({ message: "删除失败" });
+      toast.error({
+        message: "删除失败",
+        error,
+        description: "请稍后重试",
+      });
     } finally {
       deleting.value = false;
     }
@@ -206,7 +210,11 @@ async function batchDelete() {
       await fetchPages(pagination.value.page, false);
     } catch (error) {
       console.error("批量删除失败:", error);
-      toast.error({ message: "批量删除失败" });
+      toast.error({
+        message: "批量删除失败",
+        error,
+        description: "请稍后重试",
+      });
     } finally {
       deleting.value = false;
     }

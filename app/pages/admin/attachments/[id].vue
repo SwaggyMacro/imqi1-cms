@@ -3,7 +3,6 @@ import type {AttachmentDetail, AttachmentDetailResponse, AttachmentUpdateRespons
 import type { PageItem } from "~/types/apis/admin/pages";
 import type { AdminContent } from "~/types/apis/admin/contents";
 import type { CsrfResponse } from "~/types/apis/admin/categories";
-import type {ApiError} from "~/types/error";
 import { fetchAllAdminContents, fetchAllAdminPages } from "~/utils/admin-picker";
 
 const route = useRoute()
@@ -119,10 +118,11 @@ async function fetchAttachment(keepFormInput = false) {
       }
     }
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    console.error('获取附件失败:', error)
+    console.error('获取附件失败:', rawError)
     toast.error({
-      message: error.message || '获取附件失败',
+      message: '获取附件失败',
+      error: rawError,
+      description: '请稍后重试',
     })
   } finally {
     loading.value = false
@@ -173,8 +173,7 @@ async function addRelation() {
     selectedContentId.value = ""
     toast.success({ message: '关联成功' })
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    toast.error({ message: error.message || '关联失败' })
+    toast.error({ message: '关联失败', error: rawError, description: '请稍后重试' })
   }
 }
 
@@ -185,8 +184,7 @@ async function removeRelation(cid: number) {
     await syncRelations(attachment.value.contents.map(content => content.cid).filter(contentCid => contentCid !== cid))
     toast.success({ message: '已取消关联' })
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    toast.error({ message: error.message || '取消关联失败' })
+    toast.error({ message: '取消关联失败', error: rawError, description: '请稍后重试' })
   }
 }
 
@@ -212,10 +210,11 @@ async function saveAttachment() {
       await fetchAttachment()
     }
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    console.error('保存失败:', error)
+    console.error('保存失败:', rawError)
     toast.error({
-      message: error.message || '保存失败',
+      message: '保存失败',
+      error: rawError,
+      description: '请稍后重试',
     })
   } finally {
     saving.value = false
@@ -246,10 +245,11 @@ async function deleteAttachment() {
     })
     await backToAttachments()
   } catch (rawError: unknown) {
-    const error = rawError as ApiError
-    console.error('删除失败:', error)
+    console.error('删除失败:', rawError)
     toast.error({
-      message: error.message || '删除失败',
+      message: '删除失败',
+      error: rawError,
+      description: '请稍后重试',
     })
   }
 }

@@ -139,7 +139,11 @@ async function save() {
     cancelEdit();
   } catch (err) {
     console.error("保存失败:", err);
-    toast.error({ message: editingId.value ? "更新失败" : "添加失败" });
+    toast.error({
+      message: editingId.value ? "更新失败" : "添加失败",
+      error: err,
+      description: "请稍后重试",
+    });
   } finally {
     submitting.value = false;
   }
@@ -176,7 +180,11 @@ async function batchDelete() {
     await loadLogs();
   } catch (err) {
     console.error("批量删除失败:", err);
-    toast.error({ message: "批量删除失败" });
+    toast.error({
+      message: "批量删除失败",
+      error: err,
+      description: "请稍后重试",
+    });
   } finally {
     deleting.value = false;
   }
@@ -211,12 +219,11 @@ async function onImportFile(event: Event) {
     await loadLogs();
   } catch (err: unknown) {
     console.error("导入失败:", err);
-    const data = err && typeof err === "object" && "data" in err ? (err as { data?: unknown }).data : undefined;
-    const msg =
-      data && typeof data === "object" && "message" in data && typeof (data as { message: unknown }).message === "string"
-        ? (data as { message: string }).message
-        : "导入失败，请检查 JSON 格式";
-    toast.error({ message: msg });
+    toast.error({
+      message: "导入失败",
+      error: err,
+      description: "请检查 JSON 格式",
+    });
   } finally {
     importing.value = false;
     // 清空 value，便于重复选择同一个文件

@@ -153,7 +153,11 @@ async function addTravel() {
     await fetchTravels();
   } catch (error) {
     console.error("添加失败:", error);
-    toast.error({ message: "添加失败" });
+    toast.error({
+      message: "添加失败",
+      error,
+      description: "请稍后重试",
+    });
   } finally {
     submitting.value = false;
   }
@@ -203,7 +207,11 @@ async function saveEdit() {
     await fetchTravels();
   } catch (error) {
     console.error("更新失败:", error);
-    toast.error({ message: "更新失败" });
+    toast.error({
+      message: "更新失败",
+      error,
+      description: "请稍后重试",
+    });
   } finally {
     submitting.value = false;
   }
@@ -232,7 +240,11 @@ async function toggleEnabled(travel: TravelItem) {
     await fetchTravels();
   } catch (error) {
     console.error("操作失败:", error);
-    toast.error({ message: "操作失败" });
+    toast.error({
+      message: "操作失败",
+      error,
+      description: "请稍后重试",
+    });
   }
 }
 
@@ -258,7 +270,11 @@ async function deleteTravel(id: number) {
       await fetchTravels();
     } catch (error) {
       console.error("删除失败:", error);
-      toast.error({ message: "删除失败" });
+      toast.error({
+        message: "删除失败",
+        error,
+        description: "请稍后重试",
+      });
     }
   }
 }

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { siteConfig } from "~~/site.config";
 import type { AdminSettings } from "~/types/apis/admin/settings";
 
 const loading = ref(true);
@@ -11,9 +10,9 @@ const csrfToken = ref("");
 const initializing = ref(false);
 
 const settings = ref<AdminSettings>({
-  siteName: siteConfig.siteName,
-  siteUrl: siteConfig.siteUrl,
-  siteDesc: siteConfig.seo.description,
+  siteName: "",
+  siteUrl: "",
+  siteDesc: "",
   siteIcp: "",
   commentEnabled: true,
   commentModeration: false,
@@ -25,7 +24,7 @@ const settings = ref<AdminSettings>({
   commentInterval: 60,
   contentPageSize: 12,
   feedCacheInterval: 8,
-  homeCustomText: siteConfig.homeCustomText,
+  homeCustomText: "",
   musicPlaylistId: "9255074836 || netease",
   photoCategorySlug: "shot",
   moderationApiType: "1",
@@ -112,7 +111,11 @@ async function exportData() {
     toast.success({ message: "数据已导出" });
   } catch (error) {
     console.error("导出失败:", error);
-    toast.error({ message: "导出失败" });
+    toast.error({
+      message: "导出失败",
+      error,
+      description: "请稍后重试",
+    });
   } finally {
     exporting.value = false;
   }
@@ -133,7 +136,11 @@ async function onImportFile(event: Event) {
     await confirmImport();
   } catch (error) {
     console.error("读取文件失败:", error);
-    toast.error({ message: "读取备份文件失败" });
+    toast.error({
+      message: "读取备份文件失败",
+      error,
+      description: "请检查文件是否可读",
+    });
   } finally {
     // 清空 value，便于重复选择同一个文件
     input.value = "";
@@ -169,11 +176,11 @@ async function confirmImport() {
     pendingImportFileName.value = "";
   } catch (err: unknown) {
     console.error("导入失败:", err);
-    const data = err && typeof err === "object" && "data" in err ? (err as { data?: unknown }).data : undefined;
-    const msg = data && typeof data === "object" && "message" in data && typeof (data as { message: unknown }).message === "string"
-      ? (data as { message: string }).message
-      : "导入失败，请检查备份文件";
-    toast.error({ message: msg });
+    toast.error({
+      message: "导入失败",
+      error: err,
+      description: "请检查备份文件",
+    });
   } finally {
     importing.value = false;
   }
@@ -205,7 +212,9 @@ async function testEmail() {
     }
   } catch (error) {
     toast.error({
-      message: error instanceof Error ? error.message : "未知错误",
+      message: "测试邮件发送失败",
+      error,
+      description: "未知错误",
     });
   } finally {
     testingEmail.value = false;
@@ -213,9 +222,9 @@ async function testEmail() {
 }
 
 const defaultSettings: AdminSettings = {
-  siteName: siteConfig.siteName,
-  siteUrl: siteConfig.siteUrl,
-  siteDesc: siteConfig.seo.description,
+  siteName: "",
+  siteUrl: "",
+  siteDesc: "",
   siteIcp: "",
   commentEnabled: true,
   commentModeration: false,
@@ -227,7 +236,7 @@ const defaultSettings: AdminSettings = {
   commentInterval: 60,
   contentPageSize: 12,
   feedCacheInterval: 8,
-  homeCustomText: siteConfig.homeCustomText,
+  homeCustomText: "",
   musicPlaylistId: "9255074836 || netease",
   photoCategorySlug: "shot",
   moderationApiType: "1",
@@ -302,6 +311,8 @@ async function saveSettings() {
     console.error("保存失败:", error);
     toast.error({
       message: "保存失败",
+      error,
+      description: "请稍后重试",
     });
   } finally {
     saving.value = false;
@@ -346,6 +357,8 @@ async function resetToDefaults() {
     console.error("重置失败:", error);
     toast.error({
       message: "重置失败",
+      error,
+      description: "请稍后重试",
     });
   }
 }
@@ -380,6 +393,8 @@ async function initializeMissingSettings() {
     console.error("初始化失败:", error);
     toast.error({
       message: "初始化失败",
+      error,
+      description: "请稍后重试",
     });
   } finally {
     initializing.value = false;
@@ -551,19 +566,19 @@ onMounted(() => {
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-2">
                   <Label for="siteName">站点名称</Label>
-                  <Input id="siteName" v-model="settings.siteName" :placeholder="siteConfig.siteName" />
+                  <Input id="siteName" v-model="settings.siteName" placeholder="请填写 2-50 字的中文/英文站点名称" />
                 </div>
                 <div class="space-y-2">
                   <Label for="siteUrl">站点地址</Label>
-                  <Input id="siteUrl" v-model="settings.siteUrl" :placeholder="siteConfig.siteUrl" />
+                  <Input id="siteUrl" v-model="settings.siteUrl" placeholder="请填写完整 URL，需以 http:// 或 https:// 开头，末尾不带 /" />
                 </div>
                 <div class="space-y-2 md:col-span-2">
                   <Label for="siteDesc">站点描述</Label>
-                  <Input id="siteDesc" v-model="settings.siteDesc" :placeholder="siteConfig.seo.description" />
+                  <Input id="siteDesc" v-model="settings.siteDesc" placeholder="请填写站点一句话简介，建议 50-200 字" />
                 </div>
                 <div class="space-y-2">
                   <Label for="siteIcp">备案号</Label>
-                  <Input id="siteIcp" v-model="settings.siteIcp" placeholder="备案号" />
+                  <Input id="siteIcp" v-model="settings.siteIcp" placeholder="请填写 ICP 备案号，如：京ICP备12345678号" />
                 </div>
               </div>
             </CardContent>
@@ -688,15 +703,15 @@ onMounted(() => {
                   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="space-y-2">
                       <Label for="baiduAppId">AppID</Label>
-                      <Input id="baiduAppId" v-model="settings.baiduAppId" placeholder="输入 AppID" />
+                      <Input id="baiduAppId" v-model="settings.baiduAppId" placeholder="请填写百度智能云控制台获取的 AppID" />
                     </div>
                     <div class="space-y-2">
                       <Label for="baiduApiKey">API Key</Label>
-                      <Input id="baiduApiKey" v-model="settings.baiduApiKey" placeholder="输入 API Key" />
+                      <Input id="baiduApiKey" v-model="settings.baiduApiKey" placeholder="请填写百度智能云控制台获取的 API Key" />
                     </div>
                     <div class="space-y-2">
                       <Label for="baiduSecretKey">Secret Key</Label>
-                      <Input id="baiduSecretKey" v-model="settings.baiduSecretKey" type="password" placeholder="输入 Secret Key" />
+                      <Input id="baiduSecretKey" v-model="settings.baiduSecretKey" type="password" placeholder="请填写百度智能云控制台获取的 Secret Key" />
                     </div>
                   </div>
                   <div class="flex items-center justify-between pt-2">
@@ -734,7 +749,7 @@ onMounted(() => {
                     id="homeCustomText"
                     v-model="settings.homeCustomText"
                     rows="3"
-                    :placeholder="siteConfig.homeCustomText" />
+                    placeholder="请填写首页要展示的自定义文字，支持 HTML 标签，建议不超过 500 字" />
                   <p class="text-xs text-muted-foreground">显示在首页的自定义内容，支持 HTML 标签</p>
                 </div>
               </div>
@@ -746,7 +761,7 @@ onMounted(() => {
                 <h4 class="text-sm font-medium">音乐设置</h4>
                 <div class="space-y-2">
                   <Label for="musicPlaylistId">音乐列表 ID</Label>
-                  <Input id="musicPlaylistId" v-model="settings.musicPlaylistId" placeholder="9255074836 || netease" />
+                  <Input id="musicPlaylistId" v-model="settings.musicPlaylistId" placeholder="格式：歌单ID || 来源（netease/qq/tencent/kugou），如 9255074836 || netease" />
                   <p class="text-xs text-muted-foreground">网易云音乐歌单 ID，格式：歌单ID || 来源（支持 netease、qq 等）</p>
                 </div>
               </div>
@@ -758,7 +773,7 @@ onMounted(() => {
                 <h4 class="text-sm font-medium">图片处理</h4>
                 <div class="space-y-2">
                   <Label for="photoCategorySlug">图片分类 Slug</Label>
-                  <Input id="photoCategorySlug" v-model="settings.photoCategorySlug" placeholder="shot" />
+                  <Input id="photoCategorySlug" v-model="settings.photoCategorySlug" placeholder="请填写图片作品分类在 URL 中的 slug，限小写字母、数字、连字符" />
                   <p class="text-xs text-muted-foreground">图片作品分类在 URL 中的标识符</p>
                 </div>
               </div>
@@ -801,36 +816,36 @@ onMounted(() => {
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
                       <Label for="cosSecretId">SecretId</Label>
-                      <Input id="cosSecretId" v-model="settings.cosSecretId" placeholder="输入 SecretId" />
+                      <Input id="cosSecretId" v-model="settings.cosSecretId" placeholder="请填写腾讯云访问管理 API 密钥 SecretId" />
                     </div>
                     <div class="space-y-2">
                       <Label for="cosSecretKey">SecretKey</Label>
-                      <Input id="cosSecretKey" v-model="settings.cosSecretKey" type="password" placeholder="输入 SecretKey" />
+                      <Input id="cosSecretKey" v-model="settings.cosSecretKey" type="password" placeholder="请填写腾讯云访问管理 API 密钥 SecretKey" />
                     </div>
                     <div class="space-y-2">
                       <Label for="cosBucket">存储桶名称</Label>
-                      <Input id="cosBucket" v-model="settings.cosBucket" placeholder="如: bucket-name-1234567890" />
+                      <Input id="cosBucket" v-model="settings.cosBucket" placeholder="请填写完整存储桶名称，格式：bucketname-AppID（不带地域后缀）" />
                       <p class="text-xs text-muted-foreground">存储桶的完整名称，包含 AppID</p>
                     </div>
                     <div class="space-y-2">
                       <Label for="cosRegion">地域</Label>
-                      <Input id="cosRegion" v-model="settings.cosRegion" placeholder="如: ap-guangzhou" />
+                      <Input id="cosRegion" v-model="settings.cosRegion" placeholder="请填写地域代码，如 ap-guangzhou、ap-beijing、ap-shanghai" />
                       <p class="text-xs text-muted-foreground">存储桶所在地域，如 ap-guangzhou、ap-beijing</p>
                     </div>
                   </div>
                   <div class="space-y-2">
                     <Label for="cosSourceDomain">源站域名</Label>
-                    <Input id="cosSourceDomain" v-model="settings.cosSourceDomain" placeholder="https://bucket-name.cos.ap-guangzhou.myqcloud.com" />
+                    <Input id="cosSourceDomain" v-model="settings.cosSourceDomain" placeholder="请填写 COS 源站域名（需以 https:// 开头），留空则使用默认" />
                     <p class="text-xs text-muted-foreground">COS 源站域名，用于上传文件。留空则使用默认域名</p>
                   </div>
                   <div class="space-y-2">
                     <Label for="cosCdnDomain">CDN 加速域名（可选）</Label>
-                    <Input id="cosCdnDomain" v-model="settings.cosCdnDomain" placeholder="https://cdn.example.com" />
+                    <Input id="cosCdnDomain" v-model="settings.cosCdnDomain" placeholder="请填写 CDN 加速域名，需以 https:// 开头，留空则使用源站域名" />
                     <p class="text-xs text-muted-foreground">配置的 CDN 加速域名，用于外部访问文件。留空则使用源站域名</p>
                   </div>
                   <div class="space-y-2">
                     <Label for="cosImageSuffix">上传后的图片后缀（可选）</Label>
-                    <Input id="cosImageSuffix" v-model="settings.cosImageSuffix" placeholder="webp" />
+                    <Input id="cosImageSuffix" v-model="settings.cosImageSuffix" placeholder="请填写目标图片后缀，如 webp、avif、jpg，留空保持原格式" />
                     <p class="text-xs text-muted-foreground">用于云存储自动处理图片格式。将所有上传的图片转换为该后缀，不影响视频。留空则保持原格式。默认值: webp</p>
                   </div>
                 </div>
@@ -959,19 +974,19 @@ onMounted(() => {
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-2">
                     <Label for="smtpHost">SMTP 服务器地址</Label>
-                    <Input id="smtpHost" v-model="settings.smtpHost" placeholder="smtp.example.com" />
+                    <Input id="smtpHost" v-model="settings.smtpHost" placeholder="请填写 SMTP 服务器域名，如 smtp.gmail.com" />
                   </div>
                   <div class="space-y-2">
                     <Label for="smtpPort">SMTP 服务端口</Label>
-                    <Input id="smtpPort" v-model.number="settings.smtpPort" type="number" min="1" max="65535" placeholder="465" />
+                    <Input id="smtpPort" v-model.number="settings.smtpPort" type="number" min="1" max="65535" placeholder="请填写端口号，SSL 一般 465，TLS 一般 587" />
                   </div>
                   <div class="space-y-2">
                     <Label for="smtpUser">SMTP 登录用户</Label>
-                    <Input id="smtpUser" v-model="settings.smtpUser" placeholder="username@example.com" />
+                    <Input id="smtpUser" v-model="settings.smtpUser" placeholder="请填写登录邮箱地址" />
                   </div>
                   <div class="space-y-2">
                     <Label for="smtpPassword">SMTP 登录密码</Label>
-                    <Input id="smtpPassword" v-model="settings.smtpPassword" type="password" placeholder="••••••••" />
+                    <Input id="smtpPassword" v-model="settings.smtpPassword" type="password" placeholder="请填写邮箱登录密码或 SMTP 授权码" />
                   </div>
                 </div>
 
@@ -991,7 +1006,7 @@ onMounted(() => {
                   </div>
                   <div class="space-y-2 md:col-span-2">
                     <Label for="smtpAddress">SMTP 邮箱地址</Label>
-                    <Input id="smtpAddress" v-model="settings.smtpAddress" placeholder="noreply@example.com" />
+                    <Input id="smtpAddress" v-model="settings.smtpAddress" placeholder="请填写发件邮箱地址" />
                   </div>
                 </div>
 
@@ -1003,12 +1018,12 @@ onMounted(() => {
                   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
                       <Label for="smtpFromName">发件人昵称</Label>
-                      <Input id="smtpFromName" v-model="settings.smtpFromName" :placeholder="`${siteConfig.siteName} 博客`" />
+                      <Input id="smtpFromName" v-model="settings.smtpFromName" placeholder="请填写发件人显示名称，邮件接收人看到的就是这个名字" />
                       <p class="text-xs text-muted-foreground">邮件接收人看到的发件人名称</p>
                     </div>
                     <div class="space-y-2">
                       <Label for="adminEmail">站长收件邮箱</Label>
-                      <Input id="adminEmail" v-model="settings.adminEmail" placeholder="admin@example.com" />
+                      <Input id="adminEmail" v-model="settings.adminEmail" placeholder="请填写站长收件邮箱地址" />
                     </div>
                   </div>
                   <div class="flex items-center justify-between">
@@ -1053,7 +1068,7 @@ onMounted(() => {
                     type="number"
                     min="60"
                     max="3600"
-                    placeholder="300"
+                    placeholder="请填写缓存秒数，范围 60-3600，建议 300"
                   />
                   <p class="text-xs text-muted-foreground">
                     热门搜索结果的缓存时间，建议 300 秒（5分钟）

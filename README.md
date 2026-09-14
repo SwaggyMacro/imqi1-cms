@@ -533,7 +533,7 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 | 区 | 字段 | 说明 |
 | --- | --- | --- |
 | 站点基础设置 | `site.name` / `site.url` / `site.cdnUrl` / `site.rootDomain` | 站点名、访问地址、CDN 根地址与主域名。 |
-| | `site.avatarPath` / `site.logoPath` / `site.ownerName` | 站点头像、站点图标（SVG，浏览器 favicon / PWA 图标复用）、站长名。前两者自动带 CDN 前缀。 |
+| | `site.avatarPath` / `site.ownerName` | 站点头像与站长名，头像自动带 CDN 前缀。站点图标（SVG）经 `seo.ogImage` 供 og:image 与页头 logo 使用。 |
 | 构建 | `build.brotliCompression` | 构建时是否预压缩静态资源为 brotli（`.br`），需 Nginx / CDN 配合发送预压缩文件。 |
 | | `build.redis` | Redis 连接配置（仅生产构建生效）。裸机部署改这里；Docker 由构建参数覆盖，改这里无效。 |
 | 安全 | `security.allowedRefererDomains` | 允许访问 `/api/*` 的 Referer 域名白名单（`/api/mini/*` 除外，走签名鉴权）。 |

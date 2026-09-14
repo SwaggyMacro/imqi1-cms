@@ -43,9 +43,6 @@ export interface SiteBaseConfig {
   rootDomain: string;
   /** 头像路径（开发环境走本地，生产环境自动带 CDN 前缀） */
   avatarPath: string;
-  /** 站点图标路径（SVG，开发环境走本地，生产环境自动带 CDN 前缀）。
-   *  浏览器 favicon、apple-touch-icon、PWA 图标等均复用这一份，不再各存位图 */
-  logoPath: string;
   /** 站长显示名（如 "Qi1"） */
   ownerName: string;
 }
@@ -224,7 +221,7 @@ export interface BlogOrganization {
   name: string;
   /** 组织链接 URL */
   url: string;
-  /** 组织图标相对路径（如 /imgs/foreverblog.png，不需要加 cdn 前缀） */
+  /** 组织图标相对路径（如 /imgs/foreverblog.png）。此处是裸路径，CDN 前缀由使用点的 publicAsset 加 */
   icon: string;
 }
 

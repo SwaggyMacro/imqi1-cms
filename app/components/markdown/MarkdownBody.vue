@@ -284,10 +284,6 @@ onUnmounted(() => {
   mask-position: center;
 }
 
-.markdown-body :deep(.markdown-link-icon--tencent) {
-  --mk-icon: var(--mk-icon--tencent, url("/icons/tencent.svg"));
-}
-
 .markdown-body :deep(ul):not(.markdown-callout ul):not(.markdown-card ul):not(.markdown-repo ul):not(.aplayer-list ul),
 .markdown-body :deep(ol):not(.markdown-callout ol):not(.markdown-card ol):not(.markdown-repo ol):not(.aplayer-list ol) {
   padding-left: 2em;

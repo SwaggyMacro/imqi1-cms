@@ -26,7 +26,7 @@ const _nickname = "棋";
 const _ownerName = "Qi1";
 const _avatarPath = "/imgs/avatar.webp";
 
-// 站点图标是 SVG，浏览器 favicon、apple-touch-icon、PWA 图标均复用它，不再各存一份位图
+// 站点图标 SVG，只经 seo.ogImage 用于 og:image 与页头 logo（favicon / PWA 图标另有独立文件）
 const _logoPath = "/imgs/imqi1.svg";
 const _url = "https://imqi1.com";
 const _cdnUrl = "https://cdn.imqi1.com";
@@ -55,7 +55,6 @@ export const siteConfig = defineSiteConfig({
     cdnUrl: _cdnUrl,
     rootDomain: _host,
     avatarPath: `${_assetPrefix}${_avatarPath}`,
-    logoPath: `${_assetPrefix}${_logoPath}`,
     ownerName: _ownerName,
   },
 

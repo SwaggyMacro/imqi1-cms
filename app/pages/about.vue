@@ -18,7 +18,7 @@
         <div class="pl-8">
           <div
             class="w-48 h-48 rounded-full border-6 border-slate-100 dark:border-slate-700 shadow-lg overflow-hidden mb-8 transition-colors duration-300">
-            <img :src="siteConfig.site.avatarPath" :alt="siteConfig.site.ownerName" class="w-full h-full object-cover" >
+            <img :src="publicAsset(siteConfig.site.avatarPath)" :alt="siteConfig.site.ownerName" class="w-full h-full object-cover" >
           </div>
           <div
             class="text-slate-900 dark:text-slate-100 text-[clamp(3rem,8vw,6rem)] font-black tracking-tight leading-[.9] mb-4 transition-colors duration-300">

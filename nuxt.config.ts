@@ -28,7 +28,10 @@ const buildHashDir = isProduction ? `/static/${buildHash}` : "";
 
 const hasCdn = siteConfig.site.cdnUrl && siteConfig.site.cdnUrl.startsWith("http");
 const cdnURL = isProduction && hasCdn ? `${siteConfig.site.cdnUrl}${buildHashDir}` : siteConfig.site.cdnUrl;
-const publicCdnAsset = (p: string) => (isProduction && hasCdn ? `${siteConfig.site.cdnUrl}${p}` : p);
+// 绝对 URL 原样返回，避免调用点对「定义处已带前缀」的值二次拼接
+const ABSOLUTE_RE = /^(https?:)?\/\//i;
+const publicCdnAsset = (p: string) =>
+  isProduction && hasCdn && !ABSOLUTE_RE.test(p) ? `${siteConfig.site.cdnUrl}${p}` : p;
 // CSP 已改为运行时按每请求 nonce 生成、通过 HTTP 响应头投递（不再用静态 <meta>），
 // 见 server/utils/csp.ts（策略拼装）+ server/plugins/csp.ts（render:response 注入 nonce 与设头）
 const nitroIgnore = siteConfig.features.miniApi ? [] : ["api/mini/**"];
@@ -327,7 +330,7 @@ export default defineNuxtConfig({
         },
         {
           property: "og:image",
-          content: siteConfig.seo.ogImage,
+          content: publicCdnAsset(siteConfig.seo.ogImage),
         },
         {
           property: "og:locale",
@@ -340,7 +343,7 @@ export default defineNuxtConfig({
         },
         {
           name: "twitter:image",
-          content: siteConfig.seo.ogImage,
+          content: publicCdnAsset(siteConfig.seo.ogImage),
         },
         {
           name: "twitter:site",

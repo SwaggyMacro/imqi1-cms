@@ -17,7 +17,7 @@
         <!-- 头像区域 -->
         <div class="h-fit max-md:hidden">
           <img
-            :src="siteConfig.site.avatarPath"
+            :src="publicAsset(siteConfig.site.avatarPath)"
             alt="头像"
             fetchpriority="high"
             class="rounded-full max-w-50 w-50 h-50 object-cover max-md:max-w-30 max-md:w-30 max-md:h-30" >
@@ -770,7 +770,7 @@ import { useDebounceFn, useEventListener } from "@vueuse/core";
 import MetingPlayer from "~/components/MetingPlayer.vue";
 import type { GridItem } from "~/types/apis";
 import type { WaterfallItem } from "~/types/components/waterfall";
-import type { ThemeCardItem } from "~/types/pages/home";
+import type { ThemeCardItem, ThemeRightItem } from "~/types/pages/home";
 import { getChangelogMeta } from "#shared/changelog";
 import { siteConfig } from "~~/site.config";
 
@@ -1026,7 +1026,7 @@ const themeItems = computed<ThemeCardItem[]>(() => [
   },
 ]);
 
-const themeRightItems = [{ type: "fonts" }, { type: "layout", image: "/imgs/shenyang.webp" }, { type: "music" }, { type: "article" }];
+const themeRightItems: ThemeRightItem[] = [{ type: "fonts" }, { type: "layout" }, { type: "music" }, { type: "article" }];
 
 // 当前激活的样式索引
 const activeThemeIndex = ref(0);

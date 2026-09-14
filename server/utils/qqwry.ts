@@ -24,7 +24,6 @@ function normalizeIp(ip: string): string {
 
 function getDbPaths(): string[] {
   const paths: string[] = [];
-  if (process.env.QQWRY_IPDB_PATH) paths.push(process.env.QQWRY_IPDB_PATH);
 
   // 运行时资源统一放在 .output/server/runtime-assets/（源码在 server/runtime-assets/）。
   // `nuxi preview` 的 cwd 是 .output，cwd 相对路径会找不到，故优先用本模块所在目录推绝对路径。

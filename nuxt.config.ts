@@ -541,7 +541,7 @@ export default defineNuxtConfig({
 
         const runtimeFiles = [
           {
-            source: process.env.QQWRY_IPDB_PATH || join(assetsDir, "qqwry.ipdb"),
+            source: join(assetsDir, "qqwry.ipdb"),
             target: join(targetDir, "qqwry.ipdb"),
             label: "qqwry.ipdb database",
           },

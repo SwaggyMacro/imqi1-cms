@@ -11,7 +11,7 @@ description: 压缩实况照片（JPEG + 内嵌 MP4）：默认扫 .live-photos 
 脚本按 `FFMPEG_PATH`（env）→ `ffmpeg-static` → 系统 PATH 顺序探测，**第一个能真正 `-version` 的才用**（ffmpeg-static 可能下到截断二进制）。全部失败会报错退出。
 - 缺 sharp → `npm install -D sharp`
 - 缺 ffmpeg → `npm install -D ffmpeg-static`，或 Windows 装全局：`winget install Gyan.FFmpeg`（推荐，一次配好）
-- `.env` 里 `FFMPEG_PATH`：当前**已配置**，脚本会优先用该路径。
+- **当前本机实测**：`FFMPEG_PATH` 为空（未走这一级），`ffmpeg-static` 已装在 `scripts/node_modules/` 但**二进制损坏**（仅 8.2MB、`chmod +x` 后运行段错误退出码 139），系统 PATH 又无 ffmpeg → **压缩功能目前跑不起来**。先 `rm -rf scripts/node_modules/ffmpeg-static && bun run scripts:install` 重建，或在 `.env` 填一个可用的 `FFMPEG_PATH` 绕过。
 
 ## 常用工作流
 ```bash

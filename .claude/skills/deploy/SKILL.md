@@ -25,8 +25,8 @@ missing=()
 for v in COS_SECRET_ID COS_SECRET_KEY COS_BUCKET COS_REGION; do
   grep -qE "^$v=.+" .env 2>/dev/null || missing+=("$v")
 done
-# 服务器：host（可用新名 SERVER_HOST 或旧名 SERVER_IP），password，remoteDir
-grep -qE '^SERVER_HOST=.+' .env 2>/dev/null || grep -qE '^SERVER_IP=.+' .env 2>/dev/null || missing+=("SERVER_HOST(或 SERVER_IP)")
+# 服务器：host（SERVER_HOST），password，remoteDir
+grep -qE '^SERVER_HOST=.+' .env 2>/dev/null || missing+=("SERVER_HOST")
 grep -qE '^SERVER_PASSWORD=.+' .env 2>/dev/null || missing+=("SERVER_PASSWORD")
 grep -qE '^SERVER_UPLOAD_DIR=.+' .env 2>/dev/null || missing+=("SERVER_UPLOAD_DIR")
 
@@ -37,7 +37,7 @@ if [ ${#missing[@]} -gt 0 ]; then
 fi
 echo "✓ COS / 服务器上传配置齐全"
 ```
-> 参考：`SERVER_USER`/`SERVER_PORT` 缺省时脚本用 `root` / `22`（`SERVER_USERNAME`、`SERVER_USER` 为旧别名）；`COS_PREFIX`、`SERVER_UPLOAD_CONCURRENCY`、`COS_CONCURRENCY` 可省。
+> 参考：`SERVER_USER`/`SERVER_PORT` 缺省时脚本用 `root` / `22`；`COS_PREFIX`、`SERVER_UPLOAD_CONCURRENCY`、`COS_CONCURRENCY` 可省。
 > **当前 .env 实测**：`COS_*` 四项 + `SERVER_HOST/SERVER_PASSWORD/SERVER_UPLOAD_DIR` 均已配置；`SERVER_USER` 缺省用 `root`、`SERVER_PORT`=22、`COS_PREFIX`=`''`（空——但配了 CDN，故实际上传/清空前缀=`static/<hash>`，此值不参与）、`COS_CONCURRENCY`=20；`restart:server` 所需的 `BT_PANEL_URL/BT_API_KEY/BT_PROJECT_NAME` 未配、用不了。缺任一项本步即拦下提示。
 
 ## 2. 构建

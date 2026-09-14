@@ -13,11 +13,9 @@ console.log("Copying runtime assets to build output...");
 const assetsDir = join(ROOT_DIR, "server", "runtime-assets");
 const targetDir = join(ROOT_DIR, ".output", "server", "runtime-assets");
 
-const ipdbSource = process.env.QQWRY_IPDB_PATH || join(assetsDir, "qqwry.ipdb");
-
 const runtimeFiles = [
   {
-    source: ipdbSource,
+    source: join(assetsDir, "qqwry.ipdb"),
     target: join(targetDir, "qqwry.ipdb"),
     label: "qqwry.ipdb database",
   },

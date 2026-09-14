@@ -23,9 +23,9 @@ const isDryRun = args.includes('--dry-run')
 const includeNodeModules = args.includes('--node-modules')
 
 const config = {
-  host: process.env.SERVER_HOST || process.env.SERVER_IP,
+  host: process.env.SERVER_HOST,
   port: Number(process.env.SERVER_PORT || 22),
-  username: process.env.SERVER_USERNAME || process.env.SERVER_USER || 'root',
+  username: process.env.SERVER_USER || 'root',
   password: process.env.SERVER_PASSWORD,
   remoteDir: process.env.SERVER_UPLOAD_DIR,
   concurrency: Number(process.env.SERVER_UPLOAD_CONCURRENCY || 8),
@@ -33,7 +33,7 @@ const config = {
 
 function validateConfig() {
   const missing = []
-  if (!config.host) missing.push('SERVER_HOST 或 SERVER_IP')
+  if (!config.host) missing.push('SERVER_HOST')
   if (!config.password) missing.push('SERVER_PASSWORD')
   if (!config.remoteDir) missing.push('SERVER_UPLOAD_DIR')
 

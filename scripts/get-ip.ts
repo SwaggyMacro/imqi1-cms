@@ -28,9 +28,6 @@ function usage(): string {
 
 Options:
   --help, -h  Show this help.
-
-Environment:
-  QQWRY_IPDB_PATH  Override qqwry.ipdb path. Default: server/runtime-assets/qqwry.ipdb
 `;
 }
 
@@ -41,14 +38,9 @@ function normalizeIp(ip: string): string {
 }
 
 function resolveDbPath(): string {
-  const candidates = [
-    process.env.QQWRY_IPDB_PATH || "",
-    join(__dirname, "..", "server", "runtime-assets", DB_FILE),
-  ].filter(Boolean);
-
-  const found = candidates.find(path => existsSync(path));
-  if (!found) throw new Error(`qqwry.ipdb not found. Tried: ${candidates.join(", ")}`);
-  return found;
+  const dbPath = join(__dirname, "..", "server", "runtime-assets", DB_FILE);
+  if (!existsSync(dbPath)) throw new Error(`qqwry.ipdb not found. Tried: ${dbPath}`);
+  return dbPath;
 }
 
 function normalizeChinaName(value: string): string {

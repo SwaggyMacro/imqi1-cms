@@ -8,7 +8,7 @@ Nuxt 4 前端（`app/`）+ Nitro API（`server/`）+ uni-app 小程序（`mini/`
 ## 常用命令
 - 装依赖 / 初始化：`bun install`（触发 `nuxt prepare`）
 - 本地开发：`bun run dev`（app + nitro 同起）
-- 构建：`bun run build`（= `nuxt build`；hash 由 nuxt.config `genBuildHash()` 生成、作 CDN 目录 `static/<hash>`，产物进 `.output/`；`postbuild` 跑 `copy-data.mjs` + `update-sw-cdn.mjs` → 写 `.output/build-hash.json` + 更新 sw.js CDN 引用）。构建哈希**不进 `__NUXT__`**（`runtimeConfig.public` 已清空、`buildHash` 非 public），由 `/api/site` 下发、前端 `useSiteSettings` 读取。
+- 构建：`bun run build`（= `nuxt build`；hash 由 nuxt.config `genBuildHash()` 生成、作 CDN 目录 `static/<hash>`，产物进 `.output/`；`postbuild` 跑 `copy-data.ts` + `update-sw-cdn.ts` → 写 `.output/build-hash.json` + 更新 sw.js CDN 引用）。构建哈希**不进 `__NUXT__`**（`runtimeConfig.public` 已清空、`buildHash` 非 public），由 `/api/site` 下发、前端 `useSiteSettings` 读取。
 - 静态预览：`bun run generate` / `preview`，`bun run serve`（本地 file-server）
 - 小程序：`bun run mini:dev:h5` / `mini:dev:mp-weixin` / `mini:dev:mp-alipay`
 - 数据库：`bun run prisma:generate` / `prisma:studio`；初始化 `bun run db:init`
@@ -22,7 +22,7 @@ Nuxt 4 前端（`app/`）+ Nitro API（`server/`）+ uni-app 小程序（`mini/`
 - `shared/` — 跨 bundle 共享（runtimeConfig、`redis-config.ts`、amap、emoji、city-coords…）。**注意 app 与 nitro 各内联一份 → 模块级单例坑，见记忆**
 - `mini/` — uni-app 小程序：`IS_H5` + 运行时 if 分流（`min` 端无 v-html，表情/视频特殊)。**是 git 子模块**（公有 gitee `imqi1-mini`）：克隆/换机后为空目录，先 `git submodule update --init --recursive` 再跑 `mini:*`。
 - `prisma/`、`server/types` — 数据层
-- `scripts/` — 运维脚本（init-db、reset-password、upload-cos、compress-livephoto、generate-nginx-conf）。**重依赖（ffmpeg-static/cos-sdk/ssh2/pg/tsx 等）在 `scripts/package.json`、不进根 `bun install`**；首跑 `upload:cos`/`upload:server`/`compress:livephoto`/`reset:password`/`db:init` 前置一次 `bun run scripts:install`。
+- `scripts/` — 运维脚本（init-db、reset-password、upload-cos、compress-livephoto、generate-nginx-conf）。**重依赖（ffmpeg-static/cos-nodejs-sdk-v5/ssh2-sftp-client/pg/tsx 等）在 `scripts/package.json`、不进根 `bun install`**；首跑 `upload:cos`/`upload:server`/`compress:livephoto`/`reset:password`/`db:init` 前置一次 `bun run scripts:install`。
 - `docker/` — **两套显式版本（带/不带 Redis）**,无 COMPOSE_PROFILES;运行 `docker compose --env-file .env -f docker/docker-compose.yml` / `docker/docker-compose.noredis.yml`
 - `lib/`、`public/`（素材目录在 `app/assets`；`logs/` 已 gitignored）
 

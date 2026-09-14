@@ -37,15 +37,17 @@ docker compose --env-file .env -f docker/docker-compose.yml build \
 
 ## .env 关键变量
 
-运行命令统一从项目根目录的 `.env` 读变量（`--env-file .env`）。至少需设置以下五项：
+运行命令统一从项目根目录的 `.env` 读变量（`--env-file .env`）。**三项必填，两项可选**：
 
 | 变量 | 说明 |
 | --- | --- |
 | `DB_PASSWORD` | PostgreSQL 应用用户密码（compose 用它建库并传给 `POSTGRES_PASSWORD`）。PG 不像 MySQL 分 root/普通用户，单用户即超级用户 |
 | `DB_NAME` | 库名，compose 建库与导入 `init-db.sql` 都用它 |
 | `DB_USER` | 应用连接的用户。**PG 没有 root/普通用户分权**，应用用户与库所有者是同一个；设 `DB_USER=root` 是字面值能跑，但建议沿用普通用户名（如 `nodejs`、`imqi1`）保持与 MySQL 时代同样的命名习惯 |
-| `DEPLOY_PORT` | 宿主对外端口（默认 `3000`） |
-| `UPLOADS_DIR` | 本地上传目录的**宿主路径**（bind mount）。默认 `../uploads`（即项目根 `uploads/`，本地文件系统直接可见）；容器内挂载点固定为 `/app/.output/public/uploads`。裸机部署则指应用直接写入的目录。不设置即用默认 |
+| `DEPLOY_PORT` | 宿主对外端口（默认 `3000`）。**可不填**——compose 有默认值 |
+| `UPLOADS_DIR` | 本地上传目录的**宿主路径**（bind mount）。默认 `../uploads`（即项目根 `uploads/`，本地文件系统直接可见）；容器内挂载点固定为 `/app/.output/public/uploads`。裸机部署则指应用直接写入的目录。**可不填**——compose 有默认值 |
+
+> 前三个**实质必填**：compose 虽然给 postgres 容器兜了默认值，但 app 容器是从 `env_file: ../.env` 取 DB_\* 的，`.env` 里没有就两边对不上、app 连不上库。后两个只影响 compose 自身，有默认值即可。
 
 `DB_HOST` 会被 compose 自动覆盖为服务名 `postgres`，无需填写。
 

@@ -203,11 +203,11 @@ DEPLOY_CDN_DOMAIN=cdn.your-domain.com
 DEPLOY_ENABLE_CDN_REDIRECT=true
 ```
 
-Redis 是**构建期配置**，取值写在 `site.config.ts` 的 `build.redis`（裸机部署改这里，`host` 填 `localhost` 或服务器 IP 即可）：
+Redis 是**构建期配置**，取值写在 `site.config.ts` 的 `build.redis`（裸机部署改这里，`host` 填 `127.0.0.1` 或服务器 IP 即可）：
 
 ```ts
 build: {
-  redis: { enabled: true, host: "localhost", port: 6379, password: "", db: 0 },
+  redis: { enabled: true, host: "127.0.0.1", port: 6379, db: 0 },
 },
 ```
 
@@ -233,7 +233,7 @@ security: {
 },
 ```
 
-> 该文件同时被 `nuxt.config.ts`、前端与服务端引用，是 PWA manifest、CSP、SEO 等构建时数据的来源，需在**打包前**配置好。
+> 该文件同时被 `nuxt.config.ts`、前端与服务端引用，是 CSP、SEO meta、CDN 前缀、Referer 白名单等构建时数据的来源（**PWA manifest 不在此列**——它是静态文件 `public/manifest.webmanifest`），需在**打包前**配置好。
 
 ### 4. 本地打包
 
@@ -241,7 +241,7 @@ security: {
 bun run build
 ```
 
-产物位于 `.output/` 目录。`prebuild` 钩子生成构建 hash，`postbuild` 钩子拷贝 `data/` 数据并更新 Service Worker 的 CDN 引用；此外 Nitro 会在构建收尾时通过钩子把运行时资源（`qqwry.ipdb` IP 库、验证码字体、svg2png WASM）拷贝到 `.output/server/runtime-assets/`。
+产物位于 `.output/` 目录。构建 hash 由 `nuxt.config.ts` 的 `genBuildHash()` 在打包时生成，`postbuild` 钩子负责把它落盘为 `.output/build-hash.json` 并更新 Service Worker 的 CDN 引用；运行时资源（`qqwry.ipdb` IP 库、验证码字体、svg2png WASM、`emojis.json`）由 Nitro 构建收尾的钩子与 postbuild 的 `copy-data.ts` 双侧保证拷到 `.output/server/runtime-assets/`。
 
 > ⚠️ **本地上传目录建议设置 `UPLOADS_DIR`**。附件若使用「本地上传」（非 COS），默认写入 `.output/public/uploads`；而 `bun run build` 会删除并重建整个 `.output`，**重新打包后已上传的文件会全部丢失**。请在运行环境变量中把 `UPLOADS_DIR` 指向 `.output` 之外的独立绝对路径（如 `/www/wwwroot/your-site/uploads`）持久保存，详见下文第 8 节。使用腾讯云 COS 存储的用户不受影响。
 
@@ -293,7 +293,7 @@ scripts/init-db.sql
 ```shell
 # 数据库
 DB_HOST="localhost"
-DB_PORT="3306"
+DB_PORT="5432"
 DB_USER="nodejs"
 DB_PASSWORD="your_password"
 DB_NAME="nodejs"
@@ -302,7 +302,8 @@ DB_NAME="nodejs"
 PORT=3000
 NODE_PROJECT_NAME="your-project-name"
 # 必须为完整单词 production（写 prod / 留空会按非生产处理）：构建与启动都需要。
-# 非 production 时 referer / 小程序签名校验会跳过、上传目录解析错误、CDN / ISR / cookie secure 不生效。
+# 非 production 时 CDN 前缀 / 构建 hash 目录 / PWA start_url / cookie secure 等不生效（这些判断都是 === "production"）。
+# 注意：referer 与小程序签名校验只在 NODE_ENV=development 时整段跳过——写 prod 或留空**不会**跳过，仍按生产强制校验。
 NODE_ENV="production"
 UV_THREADPOOL_SIZE=64
 
@@ -360,7 +361,7 @@ bun run restart:server -- stop  # 停止
 bun run restart:server -- start # 启动
 ```
 
-服务启动后，还需配置 Nginx 将其（默认 `127.0.0.1:3000`）反向代理到对外域名，并处理 HTTPS、PWA 脚本缓存与静态资源重定向。可执行 `bun run nginx:generate` 根据 `.env` 中的 `*_PROD` 变量生成参考配置。
+服务启动后，还需配置 Nginx 将其（默认 `127.0.0.1:3000`）反向代理到对外域名，并处理 HTTPS、PWA 脚本缓存与静态资源重定向。可执行 `bun run nginx:generate` 根据 `.env` 中的 `DEPLOY_*` 变量生成参考配置。
 
 ### 10. 查看运行日志
 
@@ -415,7 +416,7 @@ SSR_INTERNAL_REQUEST_SECRET="" # SSR 内部请求密钥（建议随机长串）
 MINI_API_SECRET=""             # 小程序 API 签名密钥
 ```
 
-> `DB_HOST` 会被 compose 自动覆盖为服务名 `postgres`，**无需手动填写容器名**。Redis：需要就用带 Redis 的版本（`docker-compose.yml`），不需要就选不带 Redis 的版本——**无需在 `.env` 里配任何 Redis 变量**；要改 Redis 地址/密码等，在构建命令里加 `--build-arg`（见上文）。其它 COS 等按需填写，完整变量见 `.env.example`。
+> `DB_HOST` 会被 compose 自动覆盖为服务名 `postgres`，**无需手动填写容器名**。Redis：需要就用带 Redis 的版本（`docker-compose.yml`），不需要就选不带 Redis 的版本——**无需在 `.env` 里配任何 Redis 变量**；要改 Redis 地址等，在构建命令里加 `--build-arg`（见上文；**不支持密码**）。其它 COS 等按需填写，完整变量见 `.env.example`。
 >
 > ⚠️ **PG 单用户即超级用户**，不像 MySQL 区分 `root` / `MYSQL_USER`；`DB_USER` 设成 `postgres` 也能跑，但建议沿用普通用户名（如 `nodejs`）保持历史命名习惯。`DB_PASSWORD` 会作为 `POSTGRES_PASSWORD` 直接传给镜像，应用与 healthcheck 全程只使用这个用户。
 
@@ -515,7 +516,7 @@ docker compose --env-file .env -f docker/docker-compose.yml exec postgres \
 
 ## site.config.ts 说明
 
-`site.config.ts` 是全站的**静态配置**文件，被 `nuxt.config.ts`、`app/`（前端）与 `server/`（服务端）三方共同引用。它提供三类值：数据库未初始化时的默认 / 兜底值、构建时需要的常量（PWA manifest、CSP、SEO meta），以及统一的 SEO 文案。
+`site.config.ts` 是全站的**静态配置**文件，被 `nuxt.config.ts`、`app/`（前端）与 `server/`（服务端）三方共同引用。它提供三类值：数据库未初始化时的默认 / 兜底值、构建时需要的常量（CSP、SEO meta、CDN 前缀），以及统一的 SEO 文案。
 
 > ⚠️ 该文件的值在**打包时被内联**进客户端与服务端产物，属于构建时常量，**运行时无法修改**（改动需重新打包）。真正运行时可变的配置由数据库 + `useSiteSettings()` 管理。因此这里只放「基本不变」或「构建期就要确定」的内容。
 
@@ -529,28 +530,30 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 
 主要配置项：
 
-| 字段 | 说明 |
-| --- | --- |
-| `siteName` / `siteUrl` / `cdnUrl` / `rootDomain` | 站点名、访问地址、CDN 根地址与主域名。 |
-| `siteAvatarPath` / `ownerName` | 站点头像路径（自动带 CDN 前缀）与站长名。 |
-| `security.allowedRefererDomains` | 允许访问 `/api/*` 的 Referer 域名白名单（`/api/mini/*` 除外，走签名鉴权）。 |
-| `seo` | 全站默认的 description、keywords、og:image、og:locale、Twitter 账号等。 |
-| `social` | 页脚 / 侧栏的社交链接列表（名称、图标、地址）。 |
-| `manifest` | PWA manifest 的名称、主题色、背景色等。 |
-| `build.brotliCompression` | 构建时是否预压缩静态资源为 brotli（`.br`），需 Nginx / CDN 配合发送预压缩文件。 |
-| `features.miniApi` | 是否启用小程序 API。关闭后 `server/api/mini` 不注册、也不打入生产包。 |
-| `features.miniComment` | 是否开启小程序评论。关闭后小程序端不展示评论区，服务端评论接口也不受理。 |
-| `amap` | 高德地图相关：`useServerProxy` 生产是否走服务端 nitro 代理路由 `/_AMapService`（开发恒直连）、`entryLinks` 是否展示地图入口胶囊（分开发 / 生产）。地图能否加载由运行时判断，key / securityCode 运行时从环境变量读取（不打包进产物），生产代理模式下浏览器不持 key。 |
-| `pageTransition.fadeDuration` | 页面过渡淡入淡出时长（ms），也是各页面等待过渡完成再启动元素动画的统一延迟。 |
-| `homeCustomText` | 首页自定义 HTML 文案。 |
-| `links` | 友链页的博客组织入口（`blogOrganizations`）与本站资料（`profile`，供他人添加友链）。 |
-| `pageSeo` | 各页面（首页、关于、友链、留言、归档、地图、分类、标签等）的独立 SEO 文案；`category` / `tag` 等为函数，按名称 / 描述动态生成。 |
+| 区 | 字段 | 说明 |
+| --- | --- | --- |
+| 站点基础设置 | `site.name` / `site.url` / `site.cdnUrl` / `site.rootDomain` | 站点名、访问地址、CDN 根地址与主域名。 |
+| | `site.avatarPath` / `site.logoPath` / `site.ownerName` | 站点头像、站点图标（SVG，浏览器 favicon / PWA 图标复用）、站长名。前两者自动带 CDN 前缀。 |
+| 构建 | `build.brotliCompression` | 构建时是否预压缩静态资源为 brotli（`.br`），需 Nginx / CDN 配合发送预压缩文件。 |
+| | `build.redis` | Redis 连接配置（仅生产构建生效）。裸机部署改这里；Docker 由构建参数覆盖，改这里无效。 |
+| 安全 | `security.allowedRefererDomains` | 允许访问 `/api/*` 的 Referer 域名白名单（`/api/mini/*` 除外，走签名鉴权）。 |
+| | `security.enableCsp` | 是否启用 CSP（内容安全策略）。 |
+| SEO | `seo` | 全站默认的 `description`、`keywords`、`ogImage`、`ogLocale`、`twitterSite`。 |
+| | `seo.pages` | 各页面（首页、关于、友链、留言、归档、地图、分类、标签等）的独立 SEO 文案；`category` / `tag` 为函数，按名称 / 描述动态生成。 |
+| 页面 | `pages.transition` | 页面过渡动画：`fadeDuration` 时长（ms，也是各页面等待过渡完成再启动元素动画的统一延迟）、`translateY` 位移（px）。 |
+| | `pages.homeCustomText` | 首页自定义 HTML 文案。 |
+| | `pages.homeLinks` | 首页联系 / 入口图标条（名称、图标、链接或二维码）。 |
+| | `pages.aboutLinks` | 关于页「交个朋友」区的外链（邮箱 / 个人网站 / GitHub）。 |
+| | `pages.links` | 友链页的博客组织入口（`blogOrganizations`）与本站资料（`profile`，供他人添加友链）。 |
+| 功能 | `features.miniApi` / `features.miniComment` | 是否启用小程序 API / 小程序评论。 |
+| | `features.mobileQr` / `features.miniQr` | 文章页「本文可在【手机】上看」「【小程序】上看」入口开关。 |
+| | `features.amap` | 高德地图：`useServerProxy` 生产是否走服务端 nitro 代理路由 `/_AMapService`（开发恒直连）、`entryLinks` 是否展示地图入口胶囊（分开发 / 生产）。地图能否加载由运行时判断，key / securityCode 运行时从环境变量读取（不打包进产物），生产代理模式下浏览器不持 key。 |
 
-> 该文件同时是 PWA manifest、CSP、SEO 等构建时数据的来源，务必在**打包前**配置好。修改后需重新 `bun run build` 才会生效。
+> 该文件是 CSP、SEO meta、CDN 前缀、Referer 白名单等构建时数据的来源（PWA manifest 不在此列，它是静态文件 `public/manifest.webmanifest`），务必在**打包前**配置好。修改后需重新 `bun run build` 才会生效。
 
 ## package.json 内脚本
 
-项目的常用命令都收敛在根目录 `package.json` 的 `scripts` 中，下面按用途分组说明。带 `pre` / `post` 前缀的钩子（`prebuild`、`postbuild`、`postinstall`）由 Bun 在对应主命令前后自动执行，一般无需手动调用。
+项目的常用命令都收敛在根目录 `package.json` 的 `scripts` 中，下面按用途分组说明。带 `pre` / `post` 前缀的钩子（`postbuild`、`postinstall`）由 Bun 在对应主命令前后自动执行，一般无需手动调用。
 
 > **运维脚本的独立依赖**：部分脚本（`upload:cos`、`upload:server`、`compress:livephoto`、`db:init` 等）依赖较重的包（`ffmpeg-static` 约 80M、`cos-nodejs-sdk-v5`、`ssh2-sftp-client`、`pg`、`tsx`）。这些包已从根 `package.json` 移到 `scripts/package.json` 单独管理，**不参与主项目 `bun install` 与 Docker 构建**，以加快日常安装。首次运行这些脚本前，先执行一次 `bun run scripts:install`（即 `bun install --cwd scripts`）安装脚本依赖。脚本中共享的轻量依赖（如 `dotenv`、`bcryptjs`、`ipdb`）仍由根 `node_modules` 提供，无需重复安装。
 
@@ -559,7 +562,7 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 | 命令               | 说明                                                                                                                        |
 |--------------------|-----------------------------------------------------------------------------------------------------------------------------|
 | `bun run dev`      | 启动 Nuxt 开发服务器（默认 [http://localhost:3000](http://localhost:3000)），带热更新。                                     |
-| `bun run build`    | 打包生产产物到 `.output/`。`prebuild` 会先生成构建 hash，`postbuild` 会拷贝 `data/` 数据并更新 Service Worker 的 CDN 引用。 |
+| `bun run build`    | 打包生产产物到 `.output/`。构建 hash 在打包时由 `genBuildHash()` 生成，`postbuild` 会把它落盘为 `.output/build-hash.json`、拷贝运行时资源并更新 Service Worker 的 CDN 引用。 |
 | `bun run preview`  | 本地预览已打包的生产产物（`nuxt preview`），用于上线前验证 `.output/`。                                                     |
 | `bun run generate` | 生成静态站点（`nuxt generate`）。本项目以 SSR 为主，一般用不到。                                                            |
 | `bun run serve`    | 启动简易文件服务器（根目录为 `.attachments/`），方便开发期管理附件，不污染 `uploads/`。                                     |
@@ -580,7 +583,7 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 | `bun run upload:cos`     | 将 `public/` 静态资源上传到腾讯云 COS（需配置 `.env` 中的 `COS_*`）。                         |
 | `bun run upload:server`  | 通过 SFTP 将 `.output/server` 上传到服务器（需配置 `SERVER_*`）；支持 `-- --dry-run` 预览；默认跳过 `node_modules` 与 `runtime-assets/`，加 `--node-modules` 一并上传（首次部署/资源更新时用）。   |
 | `bun run restart:server` | 通过宝塔面板 API 远程重启服务器上的 Node 项目；支持 `-- start` / `-- stop`（需配置 `BT_*`）。 |
-| `bun run nginx:generate` | 根据 `.env` 中的 `*_PROD` 变量生成参考 Nginx 配置，填写到宝塔面板 node 管理器中的伪静态中。   |
+| `bun run nginx:generate` | 根据 `.env` 中的 `DEPLOY_*` 变量生成参考 Nginx 配置，填写到宝塔面板 node 管理器中的伪静态中。   |
 | `bun run clear:redis`    | 通过宝塔面板 API 远程清空 Redis 中的 ISR / 搜索缓存。                                         |
 
 ### 辅助工具
@@ -594,7 +597,7 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 
 ### 小程序（`mini/` 子模块）
 
-为省去手动切换目录，根目录预置了一批 `mini:*` 转发脚本，它们本质是 `bun --cwd mini run <子命令>`，也可以直接进入 `mini/` 目录执行对应命令。
+为省去手动切换目录，根目录预置了一批 `mini:*` 转发脚本，它们本质是 `cd mini && bun run <子命令>`，也可以直接进入 `mini/` 目录执行对应命令。
 
 | 命令                           | 说明                                                     |
 |--------------------------------|----------------------------------------------------------|

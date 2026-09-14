@@ -56,13 +56,13 @@ bun run upload:server
 ## 4. 上传到 COS（⚠️ 交互式「清空远程目录」，Claude 可代跑但 y/n 须用户定）
 `upload:cos` 内置 `readline` 问「是否清空远程目录 yes/no」。Claude 用管道喂 stdin 即可代跑，**不会挂起**。关键：**清空范围与 n 的语义都和文案直觉相反**，先读 `scripts/upload-cos.ts` 再向用户取明确 y/n。
 
-**清空范围（`upload-cos.ts:79` `UPLOAD_PREFIX = buildHashPrefix || COS_PREFIX || ''`）**
+**清空范围（`upload-cos.ts:88` `UPLOAD_PREFIX = buildHashPrefix || process.env.COS_PREFIX || ''`）**
 - **配 CDN**（`_cdnUrl` http(s)，当前如此）→ `buildHashPrefix` = `.build-hash-dir` = `static/<hash>` → 前缀=`static/<hash>`。`y` 只删该 hash 目录下的文件名（即刚上传那批），随即重传；**非全站**，`.env` 的 `COS_PREFIX` 不生效。
 - **未配 CDN** → `update-sw-cdn.ts` 跳过、`.build-hash-dir` 写空 → 前缀回退 `COS_PREFIX`；若它也空 → 前缀=**全 bucket**，`y` 才真的清空全站（不可逆）。
 
 **⚠️ `n` 的真实语义（不是「增量覆盖」）**
-- 目标前缀**已有文件**时答 `n` → `clearRemoteDirectory()` 返回 `false` → `main()`（`:327`）**取消整个上传**：`❌ 上传已取消`，exit 0。会「看似成功、实际没传」。
-- 目标前缀**为空**时（每次生产 build 都是新 hash）→ 答 `n`/`y` 都命中「远程目录为空，无需清空」（`:204`）→ 返回 `true` → 照常上传。常规部署即此场景，`n` 才「显得安全」。
+- 目标前缀**已有文件**时答 `n` → `clearRemoteDirectory()` 返回 `false` → `main()`（`:363`）**取消整个上传**：`❌ 上传已取消`，exit 0。会「看似成功、实际没传」。
+- 目标前缀**为空**时（每次生产 build 都是新 hash）→ 答 `n`/`y` 都命中「远程目录为空，无需清空」（`:226`）→ 返回 `true` → 照常上传。常规部署即此场景，`n` 才「显得安全」。
 
 1. **先向用户取明确答案**（AskUserQuestion 给 n/y + 说明真实后果）：常规新 hash 部署选 `n` 或 `y` 都会上传（被空目录路径接管）；但重复部署同一 hash、或未配 CDN 时，`n` 是取消、`y` 才是「清旧传新」。
 2. 拿到答案后喂 stdin 代跑：

@@ -19,7 +19,6 @@
 import { defineSiteConfig } from "./lib/site-config";
 
 // 原始字面量值（修改这些即可，下方派生字段自动更新）
-// 静态资源一律写裸路径，CDN 前缀由 utils 的 publicAsset 在生产环境补上
 const _name = "ImQi1";
 const _desc = "做技术的分享者、生活的摄影师、时事的评论员。";
 const _displayName = "做技术的分享者 · 生活的摄影师 · 时事的评论员";

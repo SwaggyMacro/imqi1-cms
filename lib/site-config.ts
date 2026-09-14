@@ -41,7 +41,7 @@ export interface SiteBaseConfig {
   cdnUrl: string;
   /** 站点根域名（不含协议），用于反向代理与 Referer 校验 */
   rootDomain: string;
-  /** 头像路径（开发环境走本地，生产环境自动带 CDN 前缀） */
+  /** 头像路径 */
   avatarPath: string;
   /** 站长显示名（如 "Qi1"） */
   ownerName: string;
@@ -100,7 +100,7 @@ export interface SiteSeoConfig {
   description: string;
   /** 默认 SEO keywords，页面级可覆盖 */
   keywords: string;
-  /** og:image / twitter:image 图片路径（生产环境带 CDN 前缀）。当前直接复用站点图标 */
+  /** og:image / twitter:image 图片路径。当前直接复用站点图标 */
   ogImage: string;
   /** og:locale */
   ogLocale: string;
@@ -221,7 +221,7 @@ export interface BlogOrganization {
   name: string;
   /** 组织链接 URL */
   url: string;
-  /** 组织图标相对路径（如 /imgs/foreverblog.png）。此处是裸路径，CDN 前缀由使用点的 publicAsset 加 */
+  /** 组织图标相对路径（如 /imgs/foreverblog.png） */
   icon: string;
 }
 

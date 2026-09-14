@@ -1,8 +1,10 @@
 # syntax=docker/dockerfile:1
 
-# 带 Redis 版本，与 docker-compose.yml 配套。构建期烘焙 REDIS_*_PROD（由 compose build.args
-# 传入，宿主 .env 的 REDIS_HOST_PROD 非空即启用）；留空则 getRedisConfig() 返回 null，
-# ISR 走文件系统缓存、搜索缓存关闭。生产容器内运行时无 Redis 环境变量。
+# 带 Redis 版本，与 docker-compose.yml 配套。构建期烘焙 Redis 连接（默认指向 compose 的
+# redis 服务），ISR 增量缓存与搜索缓存共用。参数需要改动时在构建命令里覆盖，例如：
+#   docker compose --env-file .env -f docker/docker-compose.yml build --build-arg REDIS_HOST=10.0.0.5
+# 也可传 --build-arg REDIS_ENABLED=false 临时退回「不启用」（ISR 走文件系统、搜索缓存关闭）。
+# 生产容器内运行时无 Redis 环境变量（值已烘焙进产物，运行时不读 env）。
 
 # ---- Stage 1: 依赖安装 + 构建 ----
 # 匹配 package.json packageManager="bun@1.4.0",与本地开发环境一致,
@@ -13,15 +15,17 @@ COPY . .
 RUN bun install --frozen-lockfile --ignore-scripts
 RUN bunx prisma generate
 
-# Redis 构建期烘焙
-ARG REDIS_HOST_PROD=
-ARG REDIS_PORT_PROD=6379
-ARG REDIS_PASSWORD_PROD=
-ARG REDIS_DB_PROD=0
-ENV REDIS_HOST_PROD=${REDIS_HOST_PROD} \
-    REDIS_PORT_PROD=${REDIS_PORT_PROD} \
-    REDIS_PASSWORD_PROD=${REDIS_PASSWORD_PROD} \
-    REDIS_DB_PROD=${REDIS_DB_PROD}
+# Redis 构建期烘焙（覆盖 site.config.ts 的 build.redis，见 shared/redis-config.ts）
+ARG REDIS_ENABLED=true
+ARG REDIS_HOST=redis
+ARG REDIS_PORT=6379
+ARG REDIS_PASSWORD=
+ARG REDIS_DB=0
+ENV REDIS_ENABLED=${REDIS_ENABLED} \
+    REDIS_HOST=${REDIS_HOST} \
+    REDIS_PORT=${REDIS_PORT} \
+    REDIS_PASSWORD=${REDIS_PASSWORD} \
+    REDIS_DB=${REDIS_DB}
 
 RUN bun run build
 

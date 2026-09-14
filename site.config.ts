@@ -105,6 +105,16 @@ export const siteConfig = defineSiteConfig({
   build: {
     brotliCompression: true,
     statsHtml: false,
+    // Redis 连接配置：仅生产构建生效（开发环境恒不启用 Redis）。
+    // 这里改完需重新打包才生效；不启用时 ISR 退回文件系统缓存、搜索缓存关闭，均不报错。
+    redis: {
+      enabled: true,
+      // 本机部署填 127.0.0.1；Docker 部署要改成 compose 服务名 "redis"
+      host: "127.0.0.1",
+      port: 6379,
+      password: "",
+      db: 0,
+    },
   },
 
   features: {

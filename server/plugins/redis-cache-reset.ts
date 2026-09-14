@@ -9,7 +9,7 @@ import { redis } from "#server/utils/redis";
  * 验证码 + 登录限流），会话存在 file/database（见 session-store.ts 的 SessionStoreType，
  * 不含 redis），故清空不会踢掉登录态。与后台「清空全部缓存 action=all」的 flushdb 同口径。
  *
- * 未配置 Redis 时 redis 为 null，直接跳过（dev 未配 REDIS_HOST_DEV 即如此）。
+ * 未配置 Redis 时 redis 为 null，直接跳过（开发环境恒不启用 Redis 即如此）。
  * 注意：单实例部署每进程启动清一次即可；若日后多实例横向扩展，此举会互相清掉对方刚建好的
  * 缓存，那种部署下应改为「只清特定前缀」或由部署脚本在停机时清。
  */

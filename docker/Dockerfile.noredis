@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
-# 不带 Redis 版本，与 docker-compose.noredis.yml 配套。省略 Redis 构建参数，
-# ISR 走文件系统缓存、搜索缓存关闭。
+# 不带 Redis 版本，与 docker-compose.noredis.yml 配套。本套不提供 redis 服务，
+# 构建前必须显式关掉（见下方 builder stage 的 ENV REDIS_ENABLED=false）。
 
 # ---- Stage 1: 依赖安装 + 构建 ----
 # 匹配 package.json packageManager="bun@1.4.0",与本地开发环境一致,
@@ -11,6 +11,12 @@ WORKDIR /app
 COPY . .
 RUN bun install --frozen-lockfile --ignore-scripts
 RUN bunx prisma generate
+
+# 显式关闭 Redis（覆盖 site.config.ts 的 build.redis.enabled，见 shared/redis-config.ts）：
+# 本套没有 redis 服务，不覆盖的话 getRedisConfig() 会返回 host=127.0.0.1，
+# 让容器一直去连本机 6379。关掉后 ISR 走文件系统缓存、搜索缓存关闭。
+ENV REDIS_ENABLED=false
+
 RUN bun run build
 
 # ---- Stage 1.5: 纯导出（仅 buildkit --output 使用，不进最终镜像）----

@@ -179,11 +179,7 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
 在项目根目录的 `.env` 中补充生产环境相关变量（可参考 `.env.example`）。关键项包括：
 
 ```shell
-# 生产环境 Redis（可选，构建期配置；打包时烘焙进产物，改动需重新打包）
-REDIS_HOST_PROD="localhost"     # 裸机填 localhost/服务器 IP；Docker 部署填 redis（见下方「使用 Docker 部署」章节）
-REDIS_PORT_PROD="6379"
-REDIS_PASSWORD_PROD=""
-REDIS_DB_PROD="0"
+# Redis 不在这里配置：默认值写在 site.config.ts 的 build.redis（见下方说明）
 
 # 腾讯云 COS 对象存储（可选，用于上传静态资源到 COS）
 COS_SECRET_ID=""
@@ -207,7 +203,17 @@ DEPLOY_CDN_DOMAIN=cdn.your-domain.com
 DEPLOY_ENABLE_CDN_REDIRECT=true
 ```
 
-Redis 是**构建期配置**：`nuxt build` 打包时从本机 `.env` 读取 `REDIS_*_PROD` 并烘焙进服务端产物，ISR 增量缓存与搜索缓存共用同一组值。**生产服务器运行环境不要再设置任何 Redis 环境变量**（`REDIS_*_PROD` / `NUXT_REDIS_*`），改动 prod 配置后重新打包即可生效。未配置（`REDIS_HOST_PROD` 为空）时：ISR 自动降级到文件系统缓存、搜索缓存关闭。
+Redis 是**构建期配置**，取值写在 `site.config.ts` 的 `build.redis`（裸机部署改这里，`host` 填 `localhost` 或服务器 IP 即可）：
+
+```ts
+build: {
+  redis: { enabled: true, host: "localhost", port: 6379, password: "", db: 0 },
+},
+```
+
+`nuxt build` 打包时读取并烘焙进服务端产物，ISR 增量缓存与搜索缓存共用同一组值，**改动后需重新打包**；**生产服务器运行环境不要再设置任何 Redis 环境变量**（`NUXT_REDIS_*` 之类）。**开发环境恒不启用 Redis**（本地走普通 SSR、搜索缓存关闭），无需配置。未启用（`enabled: false` 或 `host` 为空）时 ISR 自动降级到文件系统缓存、搜索缓存关闭，均不报错。
+
+> Docker 部署不用改 `site.config.ts`：选哪套 compose 文件即决定是否启用，参数在构建命令里覆盖，见下方「[使用 Docker 部署](#使用-docker-部署)」。
 
 ### 3. 配置站点信息
 
@@ -305,8 +311,8 @@ UV_THREADPOOL_SIZE=64
 # 删除并重建整个 .output，导致已上传的用户文件全部丢失。设为独立目录即可持久保留。
 UPLOADS_DIR="/www/wwwroot/your-site/uploads"
 
-# Redis 无需在此配置：Redis 是构建期配置，打包时烘焙进产物，生产运行时不再读取
-# Redis 环境变量（见上文「生产环境搭建」第 2 节）。
+# Redis 无需在此配置：Redis 是构建期配置（源头在 site.config.ts 的 build.redis），
+# 打包时烘焙进产物，生产运行时不再读取 Redis 环境变量（见上文「生产环境搭建」第 2 节）。
 
 # 高德地图，可选
 # key / securityCode 均为运行时读取，不烘焙进构建产物：
@@ -370,10 +376,10 @@ bun run restart:server -- start # 启动
 
 Docker 部署文件已整理进 `docker/` 子目录，提供**两套独立版本**按是否需要 Redis 二选一：
 
-- **带 Redis**（`docker/docker-compose.yml` + `docker/Dockerfile`）：应用 + PostgreSQL 16 + Redis 7。宿主 `.env` 填 `REDIS_HOST_PROD=redis` 即烘焙 Redis 连接并启动 redis 容器，ISR 增量缓存与搜索缓存共用。
+- **带 Redis**（`docker/docker-compose.yml` + `docker/Dockerfile`）：应用 + PostgreSQL 16 + Redis 7。默认烘焙 `redis:6379`（compose 服务名）并启动 redis 容器，ISR 增量缓存与搜索缓存共用。
 - **不带 Redis**（`docker/docker-compose.noredis.yml` + `docker/Dockerfile.noredis`）：仅应用 + PostgreSQL 16。ISR 走文件系统缓存、搜索缓存关闭，不创建 redis 容器/卷。
 
-不需要在 `.env` 中配置任何 `COMPOSE_PROFILES`，Redis 段只保留 `REDIS_*_DEV` / `REDIS_*_PROD` 各四个变量即可。两个版本的具体用法、启动命令与运维命令见 **[`docker/README.md`](docker/README.md)**。
+**是否启用 Redis 只由「选哪套 compose 文件」决定**，与 `.env` 无关（也不需要任何 `COMPOSE_PROFILES` 之类的环境变量魔法）。要指定连哪台 Redis、端口、密码、DB 号，在**构建命令里用 `--build-arg` 覆盖**，例如 `--build-arg REDIS_HOST=10.0.0.5`（可用变量：`REDIS_ENABLED` / `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` / `REDIS_DB`）。两个版本的具体用法、启动命令与运维命令见 **[`docker/README.md`](docker/README.md)**。
 
 前置要求：服务器已安装 **Docker** 与 **Docker Compose v2**（`docker compose version` 可用）。
 
@@ -403,17 +409,13 @@ DEPLOY_PORT=3000                   # 宿主对外端口，按需修改
 
 ```bash
 UPLOADS_DIR=""                 # 上传目录宿主路径；默认项目根 uploads/，本地可见
-REDIS_HOST_PROD=""             # 启用 Redis 填 redis（compose 服务名，非空即烘焙 redis:6379）；留空则不启用
-REDIS_PORT_PROD="6379"
-REDIS_PASSWORD_PROD=""
-REDIS_DB_PROD="0"
 AMAP_KEY=""                    # 高德地图 Key（旅行足迹地图功能）
 AMAP_SECURITY_CODE=""          # 高德 JS API 安全密钥
 SSR_INTERNAL_REQUEST_SECRET="" # SSR 内部请求密钥（建议随机长串）
 MINI_API_SECRET=""             # 小程序 API 签名密钥
 ```
 
-> `DB_HOST` 会被 compose 自动覆盖为服务名 `postgres`，**无需手动填写容器名**。Redis：需要就用带 Redis 的版本（`docker-compose.yml`），并在 `.env` 填 `REDIS_HOST_PROD=redis`；不需要就选不带 Redis 的版本。其它 COS 等按需填写，完整变量见 `.env.example`。
+> `DB_HOST` 会被 compose 自动覆盖为服务名 `postgres`，**无需手动填写容器名**。Redis：需要就用带 Redis 的版本（`docker-compose.yml`），不需要就选不带 Redis 的版本——**无需在 `.env` 里配任何 Redis 变量**；要改 Redis 地址/密码等，在构建命令里加 `--build-arg`（见上文）。其它 COS 等按需填写，完整变量见 `.env.example`。
 >
 > ⚠️ **PG 单用户即超级用户**，不像 MySQL 区分 `root` / `MYSQL_USER`；`DB_USER` 设成 `postgres` 也能跑，但建议沿用普通用户名（如 `nodejs`）保持历史命名习惯。`DB_PASSWORD` 会作为 `POSTGRES_PASSWORD` 直接传给镜像，应用与 healthcheck 全程只使用这个用户。
 

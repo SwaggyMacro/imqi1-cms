@@ -70,6 +70,8 @@ export interface SiteConfig {
     brotliCompression: boolean;
     /** 是否生成 vite visualizer 体积分析（stats.html）—— 默认 false，仅需排查包体积时打开 */
     statsHtml: boolean;
+    /** Redis 连接配置（仅生产构建生效，开发环境恒不启用） */
+    redis: RedisBuildConfig;
   };
   /** 功能开关 */
   features: {
@@ -123,6 +125,26 @@ export interface SiteConfig {
   };
   /** 各页面 SEO 文案（description / keywords），统一管理避免散落各页面 */
   pageSeo: PageSeo;
+}
+
+/**
+ * Redis 构建期配置
+ *
+ * 定义在 `site.config.ts` 的 `build.redis` 下，由 `nuxt.config.ts` 在打包时读取并烘焙进
+ * 产物（nitro storage/routeRules 的 ISR 增量缓存 + `runtimeConfig.redis` 的搜索缓存，
+ * 见 `shared/redis-config.ts`）。**仅生产构建生效**：开发环境恒不启用，无需配置。
+ */
+export interface RedisBuildConfig {
+  /** 是否启用 Redis。置 false（或 host 为空）时不报错降级：ISR 退回文件系统缓存、搜索缓存关闭 */
+  enabled: boolean;
+  /** Redis 主机。本机部署填 127.0.0.1；Docker 部署填 compose 服务名（如 "redis"） */
+  host: string;
+  /** Redis 端口 */
+  port: number;
+  /** Redis 密码，留空表示无密码 */
+  password: string;
+  /** Redis 数据库序号（0-15） */
+  db: number;
 }
 
 /** 博客组织条目（友链页展示） */

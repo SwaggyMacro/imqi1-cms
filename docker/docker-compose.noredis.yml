@@ -1,4 +1,5 @@
 # 不带 Redis 版本：应用 + PostgreSQL，ISR 走文件系统缓存、搜索缓存关闭，无 redis 容器/卷。
+# 是否启用 Redis 由「选这套文件」决定（Dockerfile.noredis 里烘焙 REDIS_ENABLED=false），与 .env 无关。
 # 运行：项目根目录执行 docker compose --env-file .env -f docker/docker-compose.noredis.yml up -d --build
 
 # 固定项目名（默认取配置文件所在目录名），决定卷名前缀，两套文件保持一致。

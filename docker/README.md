@@ -4,10 +4,27 @@
 
 | 版本 | 文件 | 服务 | 说明 |
 | --- | --- | --- | --- |
-| **带 Redis** | `docker-compose.yml` + `Dockerfile` | 应用 + PostgreSQL 16 + Redis 7 | `.env` 填 `REDIS_HOST_PROD=redis` 即烘焙 Redis 连接并启动 redis 容器，ISR 增量缓存与搜索缓存共用；redis 数据存于 `redis-data` 卷 |
-| **不带 Redis** | `docker-compose.noredis.yml` + `Dockerfile.noredis` | 应用 + PostgreSQL 16 | 不烘焙任何 Redis 配置：ISR 走文件系统缓存、搜索缓存关闭，无 redis 容器/卷 |
+| **带 Redis** | `docker-compose.yml` + `Dockerfile` | 应用 + PostgreSQL 16 + Redis 7 | 构建期烘焙 `redis:6379`（compose 服务名）并启动 redis 容器，ISR 增量缓存与搜索缓存共用；redis 数据存于 `redis-data` 卷 |
+| **不带 Redis** | `docker-compose.noredis.yml` + `Dockerfile.noredis` | 应用 + PostgreSQL 16 | 构建期显式关闭 Redis：ISR 走文件系统缓存、搜索缓存关闭，无 redis 容器/卷 |
 
-> 注意：`.env` 只保留 `REDIS_*_DEV` / `REDIS_*_PROD` 各四个环境变量即可；**不需要任何 `COMPOSE_PROFILES`**。是否启用 Redis 由「选用哪套 compose 文件」决定，而非环境变量魔法。
+> 注意：**是否启用 Redis 只由「选哪套 compose 文件」决定**，与 `.env` 无关，也**不需要任何 `COMPOSE_PROFILES`**。两套 Dockerfile 里各自烘焙了开关（带 Redis 的 `REDIS_ENABLED=true` / `REDIS_HOST=redis`，不带 Redis 的 `REDIS_ENABLED=false`），`.env` 里不需要也不应该再写 Redis 变量。
+
+## 指定 Redis 参数（可选）
+
+默认连的就是 compose 里的 redis 服务（`redis:6379`、无密码、DB 0），**通常不用改**。要改的话在**构建命令里用 `--build-arg` 覆盖**，不要改 `site.config.ts`，也不需要动 `.env`：
+
+```bash
+# 连外部 Redis
+docker compose --env-file .env -f docker/docker-compose.yml build \
+  --build-arg REDIS_HOST=10.0.0.5 --build-arg REDIS_PORT=6379 --build-arg REDIS_DB=1
+
+# 带密码：同时作用于应用与 redis 服务（compose 两处读同一个变量），改完重新 up
+REDIS_PASSWORD="你的密码" docker compose --env-file .env -f docker/docker-compose.yml up -d --build
+```
+
+可用变量：`REDIS_ENABLED` / `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` / `REDIS_DB`，优先级为「构建命令 > compose 文件默认值 > `site.config.ts` 的 `build.redis`」。改完**必须重新 build** 才生效（值在打包时烘焙进产物，运行时不再读环境变量）。
+
+> `REDIS_PASSWORD` 是唯一需要同时被应用和 redis 服务读到的变量，compose 已把它同时接到两边，用 shell 环境变量或 `--env-file` 传即可；单独用 `--build-arg REDIS_PASSWORD=xxx` 只会改应用、redis 服务仍无密码，两边会对不上。
 
 ## .env 关键变量
 
@@ -29,8 +46,8 @@
 docker compose --env-file .env -f docker/docker-compose.yml up -d --build
 ```
 
-- 宿主 `.env` 的 `REDIS_HOST_PROD` 填 `redis`（compose 服务名，非空即可，值会被强制按服务名解析）→ 把 `redis:6379`（无密码）烘焙进镜像并启动 redis 容器；
-- 留空 → 传空串，`getRedisConfig()` 返回 null，ISR 走文件系统、搜索缓存关闭（redis 容器仍会启动，只是应用不使用）。
+- 构建期烘焙 `REDIS_ENABLED=true` + `REDIS_HOST=redis`（compose 服务名）→ 把 `redis:6379`（无密码、DB 0）烘焙进镜像并启动 redis 容器；
+- 想连别处的 Redis 或改密码：见上文「指定 Redis 参数」，用 `--build-arg` / 环境变量覆盖，改完重新 build。
 
 ## 不带 Redis 版本
 
@@ -38,8 +55,9 @@ docker compose --env-file .env -f docker/docker-compose.yml up -d --build
 docker compose --env-file .env -f docker/docker-compose.noredis.yml up -d --build
 ```
 
-- 构建时无任何 Redis 环境变量 → ISR 走文件系统缓存、搜索缓存关闭；
+- 构建期烘焙 `REDIS_ENABLED=false` → `getRedisConfig()` 返回 null，ISR 走文件系统缓存、搜索缓存关闭；
 - 不创建 redis 容器、不创建 `redis-data` 卷。
+- 这个开关不能省：`site.config.ts` 的 `build.redis.enabled` 默认为 `true`，不显式关掉的话容器会去连 `host` 默认值 `127.0.0.1`（即容器自己），一直连不上。
 
 ## 验证
 

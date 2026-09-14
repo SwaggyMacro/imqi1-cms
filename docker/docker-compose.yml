@@ -1,5 +1,7 @@
-# 带 Redis 版本：应用 + PostgreSQL + Redis 7。宿主 .env 配置 REDIS_HOST_PROD（非空）即烘焙
-# Redis 连接并启动 redis 容器；留空则应用不使用 Redis（容器仍会启动）。
+# 带 Redis 版本：应用 + PostgreSQL + Redis 7。是否启用 Redis 由「选这套文件」决定
+# （Dockerfile 里烘焙 REDIS_ENABLED=true / REDIS_HOST=redis），与 .env 无关。
+# 需要改 host / 端口 / 密码 / DB 时在构建命令里覆盖，例如：
+#   docker compose --env-file .env -f docker/docker-compose.yml build --build-arg REDIS_HOST=10.0.0.5
 # 运行：项目根目录执行 docker compose --env-file .env -f docker/docker-compose.yml up -d --build
 
 # 固定项目名（默认取配置文件所在目录名），决定卷名前缀，两套文件保持一致。
@@ -11,18 +13,21 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       args:
-        # Redis 构建期烘焙（与下方 redis 服务同源）：REDIS_HOST_PROD 非空 → 烘焙 redis:6379。
-        REDIS_HOST_PROD: ${REDIS_HOST_PROD:+redis}
-        REDIS_PORT_PROD: ${REDIS_PORT_PROD:-6379}
-        REDIS_PASSWORD_PROD: ${REDIS_PASSWORD_PROD:-}
-        REDIS_DB_PROD: ${REDIS_DB_PROD:-0}
+        # Redis 构建期烘焙：默认值与 Dockerfile 一致，列出以便用环境变量或
+        # `--build-arg` 覆盖（CLI 优先级高于此处）。REDIS_PASSWORD 同时被下方
+        # redis 服务读取，保证应用与 redis 服务密码一致。
+        REDIS_ENABLED: ${REDIS_ENABLED:-true}
+        REDIS_HOST: ${REDIS_HOST:-redis}
+        REDIS_PORT: ${REDIS_PORT:-6379}
+        REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+        REDIS_DB: ${REDIS_DB:-0}
     image: imqi1-cms:latest
     container_name: imqi1-app
     restart: unless-stopped
     ports:
       - "${DEPLOY_PORT:-3000}:3000"
     environment:
-      # 运行时容器内不注入 Redis 变量（构建期已烘焙）；env_file 带入的 REDIS_*_PROD 进程不读取。
+      # 运行时容器内不注入 Redis 变量（构建期已烘焙）；如 shell/.env 里设了 REDIS_* 也不会被进程读取。
       DB_HOST: postgres
       DB_PORT: "5432"
       # 容器内上传目录固定；UPLOADS_DIR（.env）表示宿主演路径，见下方 volumes。
@@ -60,7 +65,7 @@ services:
     image: redis:7-alpine
     container_name: imqi1-redis
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD_PROD:-}"]
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD:-}"]
     volumes:
       - redis-data:/data
 

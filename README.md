@@ -44,7 +44,7 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
 
 ### 环境要求
 
-- **Node.js** ≥ 20（推荐 LTS 版本）
+- **Node.js** ≥ 22（推荐 LTS 版本）
 - **PostgreSQL** ≥ 14（推荐 16，与 docker 镜像版本一致；用于存储站点数据）
 - **Bun** ≥ 1.3（项目使用的包管理器与脚本运行器）
 - **Redis**（可选，用于 ISR 增量缓存与搜索缓存；未配置时 ISR 降级到文件系统、搜索缓存关闭）

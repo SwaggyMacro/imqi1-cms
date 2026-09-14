@@ -12,6 +12,6 @@ metadata:
 - **useAudioPlayer 用原生 `new Audio(song.url)`**,audio 是模块级单例且 **detached(不 appendChild 进 DOM)** → `document.querySelectorAll('audio')` 永远 0 是**正常的**,别误判成没初始化的 bug。
 - **两套 FooterMusic 实例**响应式互斥:一个包在 `md:hidden`(移动端悬浮 `fixed bottom-8 right-8 z-9999`),一个包在 `max-md:hidden`(桌面端)。桌面视口下移动版 `display:none`、反之亦然;DOM 里同时有两个 button,共享同一 useAudioPlayer 单例(模块级 `isInitialized` 守卫保证 initPlayer 只跑一次)。
 - 歌单走 `/api/meting?type=playlist&server&id`,每首 url/pic 是相对代理 `/api/meting?type=url|pic&id`,后端 `server/api/meting.ts` 302 重定向并 toHttps 升级(见 [[media-csp-https-only-firefox]])。实测 type=url→`https://m702.music.126.net/...mp3`、type=pic→`https://p3.music.126.net/...jpg`;Edge 下 https mp3 加载 `readyState=4`、`duration=30s` 正常。
-- 失败计数 `meting_api_failure_count`(localStorage):歌单拉取失败 + 单首 error/stalled 共用同一计数,达 3 次 disablePlayer 隐藏胶囊、暂停 audio(刷新后自动重试,计数重置)。
+- **失败计数是会话内存计数,不写 localStorage,且歌单失败与播放失败是两个互相隔离的计数**(**2026-09-14 订正**:早先记的「`meting_api_failure_count` 存 localStorage、两者共用同一计数」已不成立——`useAudioPlayer.ts:22` 明写「不写 localStorage——瞬时失败不再永久弃用播放器,刷新页面自动重试(自动复位)」)。现状:歌单拉取失败用 `METING_MAX_FAILURE_COUNT = 3`,播放失败(error/stalled)`playbackFailureCount` 用 `PLAYBACK_MAX_FAILURE_COUNT = 5`,各自达阈值即停用。
 
 **干扰项**:DOM 里若见到 `.aplayer-container`(list 显示 "A Bar Song (Tipsy)" 之类)那是首页/别处的独立 APlayer,与 FooterMusic 无关,排查页脚音乐时别跟它混。

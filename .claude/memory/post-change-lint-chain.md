@@ -24,9 +24,10 @@ bun run tailwindcss:lint               # 3) Tailwind 类名规范(任何时候�
 
 ## 命令细节
 
-- 根目录必须(CLAUDE.md `lint-typecheck-no-root-script`):bash CWD 易残留在 mini/ 致验错项目,先 `pwd` 确认
-- `bunx eslint .` ≠ `bun run lint` —— 根 package.json 没有 lint 脚本,务必用 bunx
-- `bunx nuxi typecheck` 走 .nuxt/tsconfig.json,根 vue-tsc 不走它会漏报
+- 根目录必须（CLAUDE.md 硬性约定）:根 `package.json` **没有** `lint`/`type-check` 脚本（只在 `mini/`），所以只能用 `bunx`;bash CWD 易残留在 mini/ 致验错项目,先 `pwd` 确认
+- `bunx eslint .` ≠ `bun run lint` —— 在根跑 `bun run lint` 会 "Script not found"
+- `bunx nuxi typecheck` 走 `.nuxt/tsconfig.json`,**根 vue-tsc 不走它会漏报**（实测漏掉 Prisma `schema.nodes.xxx` 的 `NodeType|undefined` 非空检查、`@update:model-value` 的 emit payload 类型、`editor.storage as {...}` 断言重叠等,误判 0 错误）
+- 验证 mini 用 `cd mini && bun run lint`（mini 是 uni-app 不是 Nuxt,它自己的 vue-tsc 仍适用）
 - `bun run tailwindcss:lint` 跑 scripts/tailwindcss-lint.mjs,扫 CSS 指令 / 类名冲突 / canonical 建议
 
 ## 退出判定
@@ -41,4 +42,4 @@ bun run tailwindcss:lint               # 3) Tailwind 类名规范(任何时候�
 - 改 CSS / Tailwind 配置 → tailwindcss:lint 必跑
 - 后端纯逻辑(无类型签名变动) → 至少跑 eslint
 
-相关:[[lint-typecheck-no-root-script]] [[eslint-adopted-strict]]
+相关:[[eslint-adopted-strict]]

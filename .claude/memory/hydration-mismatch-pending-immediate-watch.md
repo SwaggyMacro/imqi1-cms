@@ -28,8 +28,8 @@ watch(() => content.value?.cid, async contentId => {
 - **要揪出具体 mismatch 节点必须跑 dev**：`bunx nuxi dev --port <非冲突端口>`，dev 会打印每个 mismatch 的 SSR/CSR 值 + 组件栈；prod 抓不到细节。
 - 无 chrome-devtools MCP 时，可用系统 Chrome + 写个小 node 脚本走 **CDP**（Node≥21 原生 `WebSocket`）：`--remote-debugging-port` + `Runtime.enable` + 监听 `Runtime.consoleAPICalled`（`args` 里 `.value`/`.description`）即可抓 Vue warn/error。
 - 定位回归用 `git show <commit> -- <file>`，重点看近期是否新增了「`import.meta.client` 守卫」「`immediate: true` 的 watch」这类会让 SSR/CSR 首帧条件分叉的改动。
-- 验证通过后 `bunx eslint <file>` + `bunx nuxi typecheck`（根跑；详见 [[lint-typecheck-no-root-script]]）。
+- 验证通过后 `bunx eslint <file>` + `bunx nuxi typecheck`（根跑；详见 [[post-change-lint-chain]]）。
 
 ## 关联 / 注意
-- 与 [[usefetch-route-param-spa-refetch-trap]]（category/tag 页 apiSlug watch）同类：**watch + immediate + import.meta.client 守卫** 是 hydration 首帧不一致的高发点；审计「SSR/CSR 首帧条件是否一致」应优先盯这类。
+- 与 [[nuxt-page-key-route-path]]（category/tag 页 apiSlug watch）同类：**watch + immediate + import.meta.client 守卫** 是 hydration 首帧不一致的高发点；审计「SSR/CSR 首帧条件是否一致」应优先盯这类。
 - 本文（note/1020）二维码/小程序码区（`mobileQr||miniQrShown` 外层 div、hoverQr 弹层）**并非**本 mismatch 根因——该区 SSR/CSR 都按 `hoverQr=null`/`mobileQr 恒 true` 渲染，首帧一致。怀疑方向别只看最近改的组件，要对照 dev 的具体 stack。

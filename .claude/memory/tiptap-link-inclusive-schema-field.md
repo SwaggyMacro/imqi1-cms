@@ -26,4 +26,4 @@ Markdown.configure 同步：
 
 **⑤ unsetLink 后 markdown 不再带 `[t](u]` 是天然的**：prosemirror-markdown 的 link mark 序列化是 mark 驱动的（`marks.link.open` 写 `[`、`close` 写 `](href)`），mark 不存在就不输出。前置：必须先关掉 linkify（③第二条），否则残留裸 URL 会被 markdown-it 反向识别回 `<a>`。
 
-呼应 [[tiptap-markdown-roundtrip-gotchas]]（同编辑器）；验 Nuxt 改动流程见 [[lint-typecheck-no-root-script]]。
+呼应 [[tiptap-markdown-roundtrip-gotchas]]（同编辑器）；验 Nuxt 改动流程见 [[post-change-lint-chain]]。

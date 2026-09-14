@@ -1,3 +1,11 @@
+---
+name: nitro-route-cache-key-colon
+description: 真实 Redis 页面缓存键是冒号形式 nitro:routes:_:<frag>.<hash>.json(unstorage normalizeKey 把 / 换成 :);失效 pattern 里写斜杠 nitro/routes 会 0 命中且完全静默
+metadata:
+  node_type: memory
+  type: project
+---
+
 # Nitro ISR 页面缓存键是 `nitro:routes:`（冒号）不是 `nitro/routes`（斜杠）
 
 **真实 Redis 页面键 = `nitro:routes:_:<pathFrag>.<hash>.json`（冒号，`_` 为 name 段）。** 凡在做失效/扫描的 pattern 里出现 `/` 一律命中不了。

@@ -13,4 +13,4 @@ metadata:
 
 **别用字符串拼接 `"/login?to="+encodeURIComponent(fullPath)`**:`navigateTo` 会把字符串经 `ufo` parse→re-serialize 一遍,`encodeURIComponent` 的编码被吃掉,Location 头变成 `/login?to=/admin/contents/edit?cid=1008`(第二个 `?` 裸着)。这虽然 RFC3986 合法(query 内允许未编码 `?`,只禁 `#`,且 fullPath 不带裸 `#`),标准 `URL`/Vue Router 解析也能还原 cid,但误导且脆弱。用对象式 `navigateTo({ path:"/login", query:{ to: to.fullPath } })`,让 ufo 处理序列化(它对 query 值里的 `/` `?` `=` 同样不编码,输出相同但语义干净)。
 
-`app/pages/login.vue` 的 `redirectTo` 防开放重定向校验(`to.startsWith('/') && !to.startsWith('//') && !to.startsWith('/\\')`)对含 query 的 fullPath 同样放行,无需改。相关:[[auth-session-security-invariants]]。
+`app/pages/login.vue` 的 `redirectTo` 防开放重定向校验(**正则白名单** `/^\/[a-zA-Z0-9/?#&=_%.\-:@~]+$/` + `!to.startsWith('//')` + `!to.includes('\\')`)对含 query 的 fullPath 同样放行,无需改。相关:[[auth-session-security-invariants]]。

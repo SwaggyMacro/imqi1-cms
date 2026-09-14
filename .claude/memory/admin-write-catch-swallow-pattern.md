@@ -29,4 +29,4 @@ admin 写接口(`/api/admin/*` 的 POST/PUT/PATCH/DELETE)的 `try/catch` 里常�
 }
 ```
 
-注意:CSRF/getUser 校验本就在 try 外(见 [[admin-write-api-csrf-required]]),catch 守卫是补 try 内部的 400/404。实际 UX 影响有限——前端 catch 后多弹硬编码 toast,看不到后端具体信息;但状态码语义必须对。验证用 chrome-devtools(dev 在跑时):超长字段→400、不存在 id→404,都在写库前抛错,零副作用。
+注意:CSRF/getUser 校验本就在 try 外(见 [[admin-write-api-csrf-required]]),catch 守卫是补 try 内部的 400/404。但**状态码语义必须对**,UX 层面同样有影响——**2026-09-14 订正**:早先记的「前端 catch 后多弹硬编码 toast、看不到后端具体信息」已不成立,`useToast` 现在会自动从 `error.data.message` 抽取后端 message 作为 toast 描述(见 `app/composables/useToast.ts:15` 的 `extractApiError`)。验证用 chrome-devtools(dev 在跑时):超长字段→400、不存在 id→404,都在写库前抛错,零副作用。

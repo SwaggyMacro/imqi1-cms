@@ -1,3 +1,11 @@
+---
+name: build-hash-nitro-path
+description: .output/build-hash.json 唯一写入者是 postbuild 的 update-sw-cdn.mjs(nuxt.config 注释里的 build:done hook 不存在);它从 nitro 产物正则抓 buildHash,而产物路径随版本变→必须动态定位,硬编码会 ENOENT 被吞致文件静默缺失
+metadata:
+  node_type: memory
+  type: project
+---
+
 # build-hash.json 写入机制与 nitro 路径脆弱性
 
 **.output/build-hash.json 唯一写入者是 postbuild 脚本 `scripts/update-sw-cdn.mjs`。** `nuxt.config.ts` 第 13 行注释「由 `build:done` hook 落盘」是**空头支票——全仓库没有 build:done hook**（vite:extendConfig / nitro.hooks.compiled 都不是）。谁若按注释去找 hook 会空手而归。

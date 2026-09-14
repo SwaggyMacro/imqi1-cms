@@ -1,5 +1,5 @@
 ---
-name: array-index-trim-nouncheckedindexedaccess
+name: array-index-trim-noUncheckedIndexedAccess
 description: "ESLint 不管 TS 类型；vue-tsc 开了 noUncheckedIndexedAccess，`parts[i].trim()` 下标访问报 TS2532 'Object is possibly undefined'，要写成 `(parts[i] ?? '').trim()`"
 metadata: 
   node_type: memory
@@ -16,4 +16,4 @@ metadata:
 
 **Why**：并行批改（[[cli-skill-audit-workflow]] 一类的一次多文件工作流）里 agent 各自跑 eslint 校验，eslint 检查不到类型，导致此类错误在 typecheck 才暴露；而 `nuxi typecheck` 的 exit code 经 `| tail` 管道时会失真（取的是 tail 的码），正确判读要 `grep "error TS"`。
 
-**How to apply**：给工作流 agent 校验时，除了 eslint 还要跑 typecheck 并 grep `error TS`；自己写循环下标时统一用 `?? ""` 兜底；server 里 `parts[i].trim()` 出现在 login.post.ts / mini/comments.post.ts 的 getClientIp，2026-08-25 修过。相关：[[lint-typecheck-no-root-script]]、[[eslint-adopted-strict]]。
+**How to apply**：给工作流 agent 校验时，除了 eslint 还要跑 typecheck 并 grep `error TS`；自己写循环下标时统一用 `?? ""` 兜底；server 里 `parts[i].trim()` 出现在 login.post.ts / mini/comments.post.ts 的 getClientIp，2026-08-25 修过。相关：[[post-change-lint-chain]]、[[eslint-adopted-strict]]。

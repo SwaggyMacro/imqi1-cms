@@ -12,7 +12,7 @@
  *   由 Dockerfile 的 ENV 落到这里的 process.env。
  *
  * 只在生产构建生效：开发环境恒返回 null（不启用 Redis）。
- * 生产服务器运行环境不要再设置任何 Redis 环境变量，改配置后需重新打包才生效。
+ * 生产服务器不必再设置 Redis 环境变量，改配置后需重新打包才生效。
  * 未启用时（enabled 为 false 或 host 为空）返回 null：ISR 退回文件系统缓存、
  * 搜索缓存关闭，均不报错。
  * 纯值读取、无外部依赖，避免把 ioredis 拉进 Nuxt 构建流程。
@@ -23,7 +23,6 @@ import { siteConfig } from "../site.config";
 export interface RedisConfig {
   host: string;
   port: number;
-  password: string | undefined;
   db: number;
   lazyConnect: boolean;
 }
@@ -59,7 +58,6 @@ export function getRedisConfig(): RedisConfig | null {
   const enabled = envBool("REDIS_ENABLED") ?? base.enabled;
   const host = envStr("REDIS_HOST") ?? base.host;
   const port = envNum("REDIS_PORT") ?? base.port;
-  const password = envStr("REDIS_PASSWORD") ?? base.password;
   const db = envNum("REDIS_DB") ?? base.db;
 
   if (!enabled || !host) {
@@ -69,7 +67,6 @@ export function getRedisConfig(): RedisConfig | null {
   return {
     host,
     port: port || 6379,
-    password: password || undefined,
     db: db || 0,
     lazyConnect: false,
   };

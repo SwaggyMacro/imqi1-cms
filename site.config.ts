@@ -112,7 +112,6 @@ export const siteConfig = defineSiteConfig({
       // 本机部署填 127.0.0.1；Docker 部署要改成 compose 服务名 "redis"
       host: "127.0.0.1",
       port: 6379,
-      password: "",
       db: 0,
     },
   },

@@ -67,14 +67,15 @@ export default defineNuxtConfig({
     // 高德 key/securityCode 不烘焙进包：运行时由服务端从 process.env 读取
     //（见 server/routes/_AMapService 与 server/api/amap/config）。
     // Redis 配置：构建期从 site.config.ts 的 build.redis 读取并烘焙（见 shared/redis-config.ts）。
-    // 仅生产构建生效，开发环境恒不启用；生产运行时不再读取任何 Redis 环境变量；
+    // 仅生产构建生效，开发环境恒不启用；运行时不读 REDIS_* 环境变量，
+    // 但 NUXT_REDIS_* / NITRO_REDIS_* 仍能覆盖烘焙值（见 docker/README.md「运行时覆盖」）；
     // 搜索缓存统一从这里取值，ISR 缓存走上方 nitro storage / routeRules 的同一份 redisConfig（两者共用）。
     // 未配置时 getRedisConfig() 返回 null，这里兜成一个 host 为空的零对象：
     // 保证值始终是对象——untyped 据此生成对象类型（否则 Nuxt 会把未设置的键
     // 默认成 "" 字符串，运行时配置类型会漂移成 string）。是否启用由
     // server/utils/redis.ts 的 redisConfig.host 判定（空 host 视为关闭），
     // 而上方 storage/routeRules 的启停仍直接用 getRedisConfig() 的原生 null。
-    redis: redisConfig ?? { host: "", port: 0, password: undefined, db: 0, lazyConnect: false },
+    redis: redisConfig ?? { host: "", port: 0, db: 0, lazyConnect: false },
     // 非 public：仅服务端可读，不进 __NUXT__（浏览器拿不到）。高德是否走服务端代理，
     // 仅生产且站点开启代理时为 true；服务端 _AMapService / amap/config 据此放行。
     amapUseServerProxy: isProduction && siteConfig.amap.useServerProxy,

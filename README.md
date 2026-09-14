@@ -188,9 +188,9 @@ COS_BUCKET=""
 COS_REGION=""
 
 # 上传服务端产物到服务器（可选，SFTP）
-SERVER_HOST="你的服务器 IP"        # 旧名 SERVER_IP 仍兼容
+SERVER_HOST="你的服务器 IP"
 SERVER_PORT="22"
-SERVER_USER="root"                 # 旧名 SERVER_USERNAME 仍兼容
+SERVER_USER="root"
 SERVER_PASSWORD="你的服务器密码"
 SERVER_UPLOAD_DIR="/www/wwwroot/your-site"
 SERVER_UPLOAD_CONCURRENCY="8"      # 上传并发数（可选）
@@ -379,7 +379,7 @@ Docker 部署文件已整理进 `docker/` 子目录，提供**两套独立版本
 - **带 Redis**（`docker/docker-compose.yml` + `docker/Dockerfile`）：应用 + PostgreSQL 16 + Redis 7。默认烘焙 `redis:6379`（compose 服务名）并启动 redis 容器，ISR 增量缓存与搜索缓存共用。
 - **不带 Redis**（`docker/docker-compose.noredis.yml` + `docker/Dockerfile.noredis`）：仅应用 + PostgreSQL 16。ISR 走文件系统缓存、搜索缓存关闭，不创建 redis 容器/卷。
 
-**是否启用 Redis 只由「选哪套 compose 文件」决定**，与 `.env` 无关（也不需要任何 `COMPOSE_PROFILES` 之类的环境变量魔法）。要指定连哪台 Redis、端口、密码、DB 号，在**构建命令里用 `--build-arg` 覆盖**，例如 `--build-arg REDIS_HOST=10.0.0.5`（可用变量：`REDIS_ENABLED` / `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` / `REDIS_DB`）。两个版本的具体用法、启动命令与运维命令见 **[`docker/README.md`](docker/README.md)**。
+**是否启用 Redis 只由「选哪套 compose 文件」决定**：compose 的 `build.args` 是固定字面量，不读环境变量，所以 `.env` 里不需要也不应该写 `REDIS_*`（也不需要任何 `COMPOSE_PROFILES` 之类的环境变量魔法）。要指定连哪台 Redis、端口、DB 号，在**构建命令里用 `--build-arg` 覆盖**，例如 `--build-arg REDIS_HOST=10.0.0.5`（可用变量：`REDIS_ENABLED` / `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB`；不支持密码，见下文）。两个版本的具体用法、启动命令与运维命令见 **[`docker/README.md`](docker/README.md)**。
 
 前置要求：服务器已安装 **Docker** 与 **Docker Compose v2**（`docker compose version` 可用）。
 
@@ -508,7 +508,7 @@ docker compose --env-file .env -f docker/docker-compose.yml exec postgres \
 容器仅对外暴露 `${DEPLOY_PORT}`（默认 `3000`，HTTP）。生产环境建议在宿主机再挂一层 Nginx，将 `80/443` 反代到 `127.0.0.1:3000` 并配置 TLS。可用 `scripts/generate-nginx-conf.mjs` 生成 Nginx 配置模板。
 
 > ⚠️ **数据持久化与安全**
-> - PostgreSQL 数据存于 `pg-data` 卷、带 Redis 版本下 Redis 数据存于 `redis-data` 卷。
+> - PostgreSQL 数据存于 `pg-data` 卷、带 Redis 版本下 Redis 数据存于 `redis-data` 卷、登录会话（后台设置 `sessionStoreType=file` 时）存于 `sessions-data` 卷。
 > - 用户上传目录是 **bind mount**：宿主目录 `UPLOADS_DIR`（默认项目根 `uploads/`，本地文件系统直接可见）挂载到容器内固定路径 `/app/.output/public/uploads`。重建镜像不丢失，上传文件在宿主机即可直接访问/备份。Linux 上若容器内 `node` 用户写不进去（EACCES），需自行 `chown` 该宿主目录。
 > - `docker compose down` **不会**删除数据卷；仅 `docker compose down -v` 会清空所有数据，请谨慎使用。
 > - 首次 `up -d --build` 会执行 Bun 构建，耗时较长，属正常现象。
@@ -607,7 +607,7 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 | `bun run mini:type-check`      | 对小程序代码做 TypeScript 类型校验（`vue-tsc`）。        |
 | `bun run mini:lint`            | 对小程序代码执行 ESLint 并自动修复。                     |
 
-> 小程序端通过 HMAC-SHA256 签名（时间戳 + nonce）调用主站的 `/api/mini/*` 接口，签名密钥由主站的 `MINI_API_SECRET` 与小程序的 `VITE_MINI_API_SECRET` 两处**填写相同的值**保证一致。开发环境（`NODE_ENV=development`）或主站未配置密钥时跳过校验。
+> 小程序端通过 HMAC-SHA256 签名（时间戳 + nonce）调用主站的 `/api/mini/*` 接口，签名密钥由主站的 `MINI_API_SECRET` 与小程序的 `VITE_MINI_API_SECRET` 两处**填写相同的值**保证一致。开发环境（`NODE_ENV=development`）跳过校验；**生产环境未配置密钥时 fail-closed**（`/api/mini/*` 全部返回 401，避免未鉴权放行），所以生产必须配置。
 
 ## 小程序
 

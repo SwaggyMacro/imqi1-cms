@@ -141,8 +141,6 @@ export interface RedisBuildConfig {
   host: string;
   /** Redis 端口 */
   port: number;
-  /** Redis 密码，留空表示无密码 */
-  password: string;
   /** Redis 数据库序号（0-15） */
   db: number;
 }

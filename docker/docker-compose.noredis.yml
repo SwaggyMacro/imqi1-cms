@@ -1,8 +1,6 @@
-# 不带 Redis 版本：应用 + PostgreSQL，ISR 走文件系统缓存、搜索缓存关闭，无 redis 容器/卷。
-# 是否启用 Redis 由「选这套文件」决定（Dockerfile.noredis 里烘焙 REDIS_ENABLED=false），与 .env 无关。
-# 运行：项目根目录执行 docker compose --env-file .env -f docker/docker-compose.noredis.yml up -d --build
+# 不带 Redis 版本（应用 + PostgreSQL）；用法见 docker/README.md
 
-# 固定项目名（默认取配置文件所在目录名），决定卷名前缀，两套文件保持一致。
+# 固定项目名，决定卷名前缀；两套 compose 必须一致
 name: imqi1-cms
 
 services:
@@ -18,13 +16,17 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: "5432"
-      # 容器内上传目录固定；UPLOADS_DIR（.env）表示宿主演路径，见下方 volumes。
+      # 容器内路径固定；宿主路径见下方 volumes
       UPLOADS_DIR: /app/.output/public/uploads
     env_file:
-      - ../.env
+      # .env 可选：不存在也能启动（变量都有默认值）
+      - path: ../.env
+        required: false
     volumes:
-      # 本地上传目录 bind mount：宿主 UPLOADS_DIR（默认项目根/uploads）→ 容器内 /app/.output/public/uploads
+      # 宿主上传目录 → 容器内上传目录
       - ${UPLOADS_DIR:-../uploads}:/app/.output/public/uploads
+      # 会话（sessionStoreType=file）；须具名卷否则重建容器掉登录态，属主靠 Dockerfile.noredis 的 chown node:node
+      - sessions-data:/app/.sessions
     depends_on:
       postgres:
         condition: service_healthy
@@ -34,16 +36,17 @@ services:
     container_name: imqi1-postgres
     restart: unless-stopped
     environment:
-      # 单用户即超级用户；应用与 healthcheck 均用 DB_USER（PG 无 MySQL 的 root/普通用户分权）。
+      # PG 单用户即超级用户（无 MySQL 那样的 root/普通用户分权）
       POSTGRES_USER: ${DB_USER:-imqi1}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?请在 .env 设置 DB_PASSWORD}
+      # 默认 123456 只为不配 .env 也能起来（PG 不接受空密码）；生产务必改掉
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-123456}
       POSTGRES_DB: ${DB_NAME:-imqi1-cms}
     volumes:
       - pg-data:/var/lib/postgresql/data
-      # 卷为空时首次启动自动执行 init-db.sql（建表 + 默认数据）；卷已有数据则跳过。
+      # 卷为空时首次启动自动建表 + 种子数据
       - ../scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
     healthcheck:
-      # pg_isready 无需密码，仅探测服务可接受连接；就绪后才启动 app。
+      # pg_isready 无需密码，仅探测可连接
       test: ["CMD", "pg_isready", "-U", "${DB_USER:-imqi1}"]
       interval: 10s
       timeout: 5s
@@ -51,3 +54,4 @@ services:
 
 volumes:
   pg-data:
+  sessions-data:

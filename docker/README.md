@@ -7,28 +7,37 @@
 | **带 Redis** | `docker-compose.yml` + `Dockerfile` | 应用 + PostgreSQL 16 + Redis 7 | 构建期烘焙 `redis:6379`（compose 服务名）并启动 redis 容器，ISR 增量缓存与搜索缓存共用；redis 数据存于 `redis-data` 卷 |
 | **不带 Redis** | `docker-compose.noredis.yml` + `Dockerfile.noredis` | 应用 + PostgreSQL 16 | 构建期显式关闭 Redis：ISR 走文件系统缓存、搜索缓存关闭，无 redis 容器/卷 |
 
-> 注意：**是否启用 Redis 只由「选哪套 compose 文件」决定**，与 `.env` 无关，也**不需要任何 `COMPOSE_PROFILES`**。两套 Dockerfile 里各自烘焙了开关（带 Redis 的 `REDIS_ENABLED=true` / `REDIS_HOST=redis`，不带 Redis 的 `REDIS_ENABLED=false`），`.env` 里不需要也不应该再写 Redis 变量。
+> 注意：**是否启用 Redis 只由「选哪套 compose 文件」决定**。两套 Dockerfile 里各自烘焙了开关（带 Redis 的 `REDIS_ENABLED=true` / `REDIS_HOST=redis`，不带 Redis 的 `REDIS_ENABLED=false`），compose 的 `build.args` 写的是**固定字面量**，不读环境变量 —— 所以 `.env` 里不需要也**不应该**再写任何 `REDIS_*` 变量（写了也不会生效，见下文「运行时覆盖」唯一例外）。也**不需要任何 `COMPOSE_PROFILES`**。
+
+> **`site.config.ts` 的 `build.redis` 在 Docker 部署下同样不生效**，它只对**裸机部署**负责。两个 Dockerfile 总会把 `REDIS_ENABLED` / `REDIS_HOST` 等设进构建环境，而 [shared/redis-config.ts](../shared/redis-config.ts) 的取值是 `环境变量 ?? site.config`——环境变量一旦有值，`site.config` 就永远不被查。所以把 `build.redis.enabled` 改成 `false` 并不能关掉 Docker 里的 Redis；Docker 这边唯一的开关就是选哪套 compose。
 
 ## 指定 Redis 参数（可选）
 
-默认连的就是 compose 里的 redis 服务（`redis:6379`、无密码、DB 0），**通常不用改**。要改的话在**构建命令里用 `--build-arg` 覆盖**，不要改 `site.config.ts`，也不需要动 `.env`：
+默认连的就是 compose 里的 redis 服务（`redis:6379`、DB 0、无鉴权），**通常不用改**。要改的话在**构建命令里用 `--build-arg` 覆盖**，不要改 `site.config.ts`，也不要动 `.env`：
 
 ```bash
 # 连外部 Redis
 docker compose --env-file .env -f docker/docker-compose.yml build \
   --build-arg REDIS_HOST=10.0.0.5 --build-arg REDIS_PORT=6379 --build-arg REDIS_DB=1
-
-# 带密码：同时作用于应用与 redis 服务（compose 两处读同一个变量），改完重新 up
-REDIS_PASSWORD="你的密码" docker compose --env-file .env -f docker/docker-compose.yml up -d --build
 ```
 
-可用变量：`REDIS_ENABLED` / `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` / `REDIS_DB`，优先级为「构建命令 > compose 文件默认值 > `site.config.ts` 的 `build.redis`」。改完**必须重新 build** 才生效（值在打包时烘焙进产物，运行时不再读环境变量）。
+可用变量：`REDIS_ENABLED` / `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB`（不含密码，见下）。`--build-arg` 优先级高于 compose 里的字面量。改完**必须重新 build** 才生效（值在打包时烘焙进产物）。
 
-> `REDIS_PASSWORD` 是唯一需要同时被应用和 redis 服务读到的变量，compose 已把它同时接到两边，用 shell 环境变量或 `--env-file` 传即可；单独用 `--build-arg REDIS_PASSWORD=xxx` 只会改应用、redis 服务仍无密码，两边会对不上。
+> ⚠️ 用 `docker compose build --build-arg ...` 再 `up`，**不要**用 `up --build` —— 后者不接受 `--build-arg`。
+
+> 不支持 Redis 密码（2026-09-14 移除）：密码是唯一要同时喂给 app（构建期）和 redis 服务（运行期）的值，而 `--build-arg` 只管构建期，非对称的口子容易配出一边有一边没有。当前默认部署的 redis 只在 compose 内网可达（**未发布端口**），不开鉴权。若确需密码，自己给 `redis` 服务加 `--requirepass` 并同步改 `shared/redis-config.ts` 的连接参数。
+
+## 运行时覆盖（意料之外，正常部署不会触发）
+
+烘焙进产物的值**并非绝对不可变**：Nuxt/Nitro 的 `runtimeConfig` 在进程启动时还会再读一遍环境变量，前缀为 `NUXT_`（Nuxt 默认）和 `NITRO_`（Nitropack 内部，**写死、无法关闭**）。键名规则是路径转大写下划线拼接，例如 `redis.host` → `REDIS_HOST`。
+
+所以容器环境里若存在 `NUXT_REDIS_HOST` 或 `NITRO_REDIS_HOST`，会**覆盖**掉构建期烘焙的 host。实测 `docker run -e NUXT_REDIS_HOST=wrong imqi1-cms:latest`，日志会显示连到 `wrong`。
+
+正常部署不会有人去设这两个前缀。风险点在于**把外部环境整个灌进容器**（`env_file` / `-e` 透传），此时 `.env` 里的 `NUXT_*` 会被带进去。`REDIS_*` 无前缀变量不受影响（不读）。
 
 ## .env 关键变量
 
-运行命令统一从项目根目录的 `.env` 读变量（`--env-file .env`）。至少需设置以下四项：
+运行命令统一从项目根目录的 `.env` 读变量（`--env-file .env`）。至少需设置以下五项：
 
 | 变量 | 说明 |
 | --- | --- |
@@ -46,8 +55,8 @@ REDIS_PASSWORD="你的密码" docker compose --env-file .env -f docker/docker-co
 docker compose --env-file .env -f docker/docker-compose.yml up -d --build
 ```
 
-- 构建期烘焙 `REDIS_ENABLED=true` + `REDIS_HOST=redis`（compose 服务名）→ 把 `redis:6379`（无密码、DB 0）烘焙进镜像并启动 redis 容器；
-- 想连别处的 Redis 或改密码：见上文「指定 Redis 参数」，用 `--build-arg` / 环境变量覆盖，改完重新 build。
+- 构建期烘焙 `REDIS_ENABLED=true` + `REDIS_HOST=redis`（compose 服务名）→ 把 `redis:6379`（DB 0、无鉴权）烘焙进镜像并启动 redis 容器；
+- 想连别处的 Redis：见上文「指定 Redis 参数」，用 `--build-arg` 覆盖，改完重新 build。
 
 ## 不带 Redis 版本
 
@@ -78,12 +87,32 @@ docker compose --env-file .env -f docker/docker-compose.yml logs -f app
 docker compose --env-file .env -f docker/docker-compose.yml restart app
 docker compose --env-file .env -f docker/docker-compose.yml down   # 数据卷保留
 
-# 进入 PostgreSQL 命令行（库名以 .env 中的 $DB_NAME 为准；PG 单用户即超级用户，无 root/普通分权）
-docker compose --env-file .env -f docker/docker-compose.yml exec postgres psql -U "$DB_USER" -d "$DB_NAME"
+# 进入 PostgreSQL 命令行（用户名/库名换成你 .env 里的 DB_USER / DB_NAME；PG 单用户即超级用户）
+docker compose --env-file .env -f docker/docker-compose.yml exec postgres psql -U imqi1 -d imqi1-cms
 ```
 
 > ⚠️ `docker compose ... down -v` 会**删除数据卷、清空所有数据**，请谨慎使用。
 
+## 数据卷
+
+| 卷 | 内容 | 丢了会怎样 |
+| --- | --- | --- |
+| `imqi1-cms_pg-data` | PostgreSQL 数据（文章、评论、设置、后台附件 COS 密钥…） | 整站数据没了 |
+| `imqi1-cms_sessions-data` | 登录会话（`sessionStoreType=file`，**未配置时即默认此值**） | 所有人掉登录态 |
+| `imqi1-cms_redis-data` | Redis 持久化（仅带 Redis 版本） | 缓存重新生成，不影响数据 |
+
+`sessions-data` 挂的是容器内 `/app/.sessions`。**不要改成临时目录或去掉这个挂载**：`up -d --build` 会重建容器、连带换掉容器内的文件系统，会话会随镜像重建一起消失。卷里的属主继承自 Dockerfile 预建并 `chown node:node` 的 `/app/.sessions`，所以那行 chown 不能删——否则卷是 root 属主，非 root 的 `node` 用户写不进去（实测 `Permission denied`）。
+
+会话存哪由后台「设置」页的 **Session 存储** 卡片决定（下拉三选一：文件存储 / 数据库存储 / 内存存储），**只有「文件存储」用这个卷**：
+
+- `file`「文件存储」（**DB 里没配过这项时的默认值**）→ 容器内 `/app/.sessions`，即本卷
+- `database`「数据库存储」→ PostgreSQL，跟着 `pg-data` 卷走，不碰本卷
+- `memory`「内存存储」→ 进程内存，容器一重建就全体掉登录态
+
+所以「从没配过这项」的人其实也在用这个卷，不是只有显式选了「文件存储」才用。
+
+> 两套 compose 的项目名都是 `imqi1-cms`，所以卷名相同：在带/不带 Redis 两套之间切换，PostgreSQL 数据与会话都是共用的。
+
 ## 镜像加速
 
-如服务器在国内拉 `postgres:16-alpine` / `oven/bun:1.3.10` / `node:22-slim` 慢，可在 `~/.docker/daemon.json` 加 `registry-mirrors`（按就近原则挑选实际可达的源，本仓库验证 `https://docker.m.daocloud.io` 可用）。镜像列表见各 `Dockerfile` 的 `FROM` 行。
+如服务器在国内拉 `postgres:16-alpine` / `oven/bun:1.4` / `node:22-slim` 慢，可在 `~/.docker/daemon.json` 加 `registry-mirrors`（按就近原则挑选实际可达的源，本仓库验证 `https://docker.m.daocloud.io` 可用）。镜像列表见各 `Dockerfile` 的 `FROM` 行。

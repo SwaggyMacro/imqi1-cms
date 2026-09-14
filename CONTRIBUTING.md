@@ -54,7 +54,7 @@ bun run mini:type-check
 2. **Admin 写接口必须带 CSRF**：`/api/admin/*` 的 POST/PUT/DELETE 走 `validateCsrfToken`（POST/PUT 从 body `csrfToken`，DELETE 从 header `x-csrf-token`）。
 3. **DB 改动**：**禁用 `migrate dev/reset`**（会 reset 丢数据）。schema 变更走 `db execute` 或 `scripts/` 里的幂等 tsx；库名 `imqi1-cms`。
 4. **类型放独立文件**：前端 `app/types/apis`、服务端 `server/types/apis`，不在 `.ts/.vue` 内联 `interface/type`；API 端到端类型用 Nuxt 内置 `InternalApi`，入参加 zod 局部 `z.infer`。
-5. **敏感配置运行时化**：高德 / COS 等密钥走构建期烘焙或 env 注入，**别写死**；Redis 连接配置的默认值在 `site.config.ts` 的 `build.redis`（只有 host/端口这类非密钥值），密码等参数走构建期 env 覆盖（`REDIS_HOST` / `REDIS_PASSWORD` 等，见 `shared/redis-config.ts`），别把真实密码提交进配置文件。
+5. **敏感配置运行时化**：高德 / COS 等密钥走构建期烘焙或 env 注入，**别写死**；Redis 连接配置的默认值在 `site.config.ts` 的 `build.redis`，构建期 env 覆盖（`REDIS_HOST` / `REDIS_PORT` / `REDIS_DB` 等，见 `shared/redis-config.ts`）只用于 Docker 构建，别把真实密钥提交进配置文件。
 6. **会话与令牌**：`sessionId`/`authCode` 等必须用 `crypto.randomBytes`（非 `Math.random`，否则可预测）。
 7. **公开 URL**：生产域名如需替换，改 `site.config.ts`；提交前确认没有把个人隐私或内部主机信息一并带入。
 

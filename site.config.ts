@@ -19,6 +19,7 @@
 import { defineSiteConfig } from "./lib/site-config";
 
 // 原始字面量值（修改这些即可，下方派生字段自动更新）
+// 静态资源一律写裸路径，CDN 前缀由 utils 的 publicAsset 在生产环境补上
 const _name = "ImQi1";
 const _desc = "做技术的分享者、生活的摄影师、时事的评论员。";
 const _displayName = "做技术的分享者 · 生活的摄影师 · 时事的评论员";
@@ -31,15 +32,11 @@ const _logoPath = "/imgs/imqi1.svg";
 const _url = "https://imqi1.com";
 const _cdnUrl = "https://cdn.imqi1.com";
 const _host = new URL(_url).hostname;
-const _isProduction = process.env.NODE_ENV === "production";
 
 // 站长对外链接：首页图标条与关于页按钮共用同一批字面量，避免两处各写一份
 const _email = "mailto:imqi1@qq.com";
 const _website = "https://qi1.website";
 const _github = "https://github.com/imqi1-github";
-
-// 静态资源 CDN 前缀：生产环境带 CDN 根（不带构建 hash），开发环境为空走本地 public
-const _assetPrefix = _isProduction ? _cdnUrl : "";
 
 /**
  * 全站静态配置实例
@@ -54,7 +51,7 @@ export const siteConfig = defineSiteConfig({
     url: _url,
     cdnUrl: _cdnUrl,
     rootDomain: _host,
-    avatarPath: `${_assetPrefix}${_avatarPath}`,
+    avatarPath: _avatarPath,
     ownerName: _ownerName,
   },
 
@@ -82,7 +79,7 @@ export const siteConfig = defineSiteConfig({
   seo: {
     description: _desc,
     keywords: "棋,ImQi1,棋的小站,生活,科技,编程,学习,摄影,时事",
-    ogImage: `${_assetPrefix}${_logoPath}`,
+    ogImage: _logoPath,
     ogLocale: "zh_CN",
     twitterSite: "@imqi1_X",
     pages: {

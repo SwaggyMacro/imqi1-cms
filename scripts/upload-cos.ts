@@ -6,7 +6,7 @@ import readline from 'readline'
 
 import dotenv from 'dotenv'
 
-import { ProgressConsole } from './lib/progress.mjs'
+import { ProgressConsole } from './lib/progress'
 
 // 使用 createRequire 来导入 CommonJS 模块
 const require = createRequire(import.meta.url)

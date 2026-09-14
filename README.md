@@ -505,7 +505,7 @@ docker compose --env-file .env -f docker/docker-compose.yml exec postgres \
 
 ### 5. 反向代理与 HTTPS
 
-容器仅对外暴露 `${DEPLOY_PORT}`（默认 `3000`，HTTP）。生产环境建议在宿主机再挂一层 Nginx，将 `80/443` 反代到 `127.0.0.1:3000` 并配置 TLS。可用 `scripts/generate-nginx-conf.mjs` 生成 Nginx 配置模板。
+容器仅对外暴露 `${DEPLOY_PORT}`（默认 `3000`，HTTP）。生产环境建议在宿主机再挂一层 Nginx，将 `80/443` 反代到 `127.0.0.1:3000` 并配置 TLS。可用 `scripts/generate-nginx-conf.ts` 生成 Nginx 配置模板。
 
 > ⚠️ **数据持久化与安全**
 > - PostgreSQL 数据存于 `pg-data` 卷、带 Redis 版本下 Redis 数据存于 `redis-data` 卷、登录会话（后台设置 `sessionStoreType=file` 时）存于 `sessions-data` 卷。

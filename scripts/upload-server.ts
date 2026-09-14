@@ -5,7 +5,7 @@ import { createRequire } from 'module'
 
 import dotenv from 'dotenv'
 
-import { ProgressConsole } from './lib/progress.mjs'
+import { ProgressConsole } from './lib/progress'
 
 const require = createRequire(import.meta.url)
 const SftpClient = require('ssh2-sftp-client')

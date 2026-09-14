@@ -21,7 +21,7 @@ bun run compress:livephoto
 ```
 完成后从 `.compressed-live-photos/` 取成品。文件名 = 原名 + `_compressed`（默认不覆盖原文件）。
 
-## 关键选项（`node scripts/compress-livephoto.mjs` 或 `bun run compress:livephoto`）
+## 关键选项（`bun scripts/compress-livephoto.ts` 或 `bun run compress:livephoto`）
 | 选项 | 作用 | 默认 |
 |---|---|---|
 | `-o --output <dir>` | 输出目录 | 原目录生成 `<name>_compressed.jpg`；默认模式下为 `.compressed-live-photos` |
@@ -36,9 +36,9 @@ bun run compress:livephoto
 示例：
 ```bash
 bun run compress:livephoto                        # 默认 .live-photos → .compressed-live-photos
-node scripts/compress-livephoto.mjs photo.jpg
-node scripts/compress-livephoto.mjs .attachments/2026/05 -o compressed/ --video-height 720
-node scripts/compress-livephoto.mjs photo.jpg --overwrite --video-height 720 --crf 30
+bun scripts/compress-livephoto.ts photo.jpg
+bun scripts/compress-livephoto.ts .attachments/2026/05 -o compressed/ --video-height 720
+bun scripts/compress-livephoto.ts photo.jpg --overwrite --video-height 720 --crf 30
 ```
 
 ## 汇报 / 注意

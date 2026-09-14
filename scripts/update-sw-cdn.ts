@@ -1,6 +1,8 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync, copyFileSync, readdirSync } from "fs";
 import { join } from "path";
 
+import { siteConfig } from "../site.config";
+
 // ========== 从 nitro 产物读取 build-hash ==========
 // nuxt.config.ts 的 buildHash 在构建时烘焙进 nitro 的服务端产物（键形如 "buildHash":"<ts>-<hex>"）。
 // 该文件路径随 Nuxt/Nitro 版本变化（早前为 chunks/_/nitro.mjs，Nitro 2.13+ 为 chunks/nitro/nitro.mjs），
@@ -73,27 +75,13 @@ try {
   console.error(`✗ build-hash.json 生成失败: ${e.message}`);
 }
 
-// 从 site.config.ts 读取 CDN 配置
-function getCdnConfig() {
-  try {
-    const configPath = join(process.cwd(), "site.config.ts");
-    if (!existsSync(configPath)) return null;
-
-    const content = readFileSync(configPath, "utf-8");
-    const match = content.match(/_cdnUrl\s*=\s*(["'])([^"']*)\1/);
-    if (!match) return null;
-
-    const cdnUrl = match[2].trim();
-    if (!cdnUrl.startsWith("http://") && !cdnUrl.startsWith("https://")) {
-      return null;
-    }
-    return cdnUrl;
-  } catch {
-    return null;
-  }
-}
-
-const cdnBaseURL = getCdnConfig();
+// 读 site.config 的 CDN 根（用原始字段 site.cdnUrl，不是带前缀的派生字段——
+// postbuild 进程没有 NODE_ENV=production，派生字段会是本地路径）。
+// 曾用正则把 site.config.ts 当文本扒 `_cdnUrl = "..."`：用户重排常量区即静默失效。
+const cdnBaseURL = (() => {
+  const cdnUrl = siteConfig.site.cdnUrl?.trim();
+  return cdnUrl && cdnUrl.startsWith("http") ? cdnUrl : null;
+})();
 
 function copyPublicFileToServerRoot(fileName) {
   const sourcePath = join(process.cwd(), ".output", "public", fileName);

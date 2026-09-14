@@ -28,7 +28,7 @@ bun run tailwindcss:lint               # 3) Tailwind 类名规范(任何时候�
 - `bunx eslint .` ≠ `bun run lint` —— 在根跑 `bun run lint` 会 "Script not found"
 - `bunx nuxi typecheck` 走 `.nuxt/tsconfig.json`,**根 vue-tsc 不走它会漏报**（实测漏掉 Prisma `schema.nodes.xxx` 的 `NodeType|undefined` 非空检查、`@update:model-value` 的 emit payload 类型、`editor.storage as {...}` 断言重叠等,误判 0 错误）
 - 验证 mini 用 `cd mini && bun run lint`（mini 是 uni-app 不是 Nuxt,它自己的 vue-tsc 仍适用）
-- `bun run tailwindcss:lint` 跑 scripts/tailwindcss-lint.mjs,扫 CSS 指令 / 类名冲突 / canonical 建议
+- `bun run tailwindcss:lint` 跑 scripts/tailwindcss-lint.ts,扫 CSS 指令 / 类名冲突 / canonical 建议
 
 ## 退出判定
 

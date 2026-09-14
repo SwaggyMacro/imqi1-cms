@@ -530,7 +530,7 @@ export default defineNuxtConfig({
     },
 
     // Nitro 构建完成后复制运行时资源到统一目录 .output/server/runtime-assets/。
-    // 与 scripts/copy-data.mjs 同源同目标：此 hook 保证裸 `nuxt build` 也能拷贝，
+    // 与 scripts/copy-data.ts 同源同目标：此 hook 保证裸 `nuxt build` 也能拷贝，
     // postbuild 脚本覆盖 `bun run build` 流程；两者幂等、结果一致。
     hooks: {
       compiled: async () => {

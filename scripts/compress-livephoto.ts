@@ -13,7 +13,7 @@
  *   - 输出 MP4 带 +faststart,moov atom 前置,网页 fetch 后可立即播放
  *
  * 用法:
- *   node scripts/compress-livephoto.mjs [文件或目录] [选项]
+ *   bun scripts/compress-livephoto.ts [文件或目录] [选项]
  *
  * 默认行为(无参数):
  *   扫描 .live-photos 目录下所有 .jpg/.jpeg,压缩到 .compressed-live-photos
@@ -79,7 +79,7 @@ try {
 const USAGE = `压缩实况照片(JPEG + 内嵌 MP4)
 
 用法:
-  node scripts/compress-livephoto.mjs [文件或目录] [选项]
+  bun scripts/compress-livephoto.ts [文件或目录] [选项]
 
 默认行为(无参数):
   扫描 .live-photos 目录下所有 .jpg/.jpeg,压缩到 .compressed-live-photos
@@ -102,9 +102,9 @@ const USAGE = `压缩实况照片(JPEG + 内嵌 MP4)
 
 示例:
   npm run compress:livephoto                        # 默认: .live-photos → .compressed-live-photos
-  node scripts/compress-livephoto.mjs photo.jpg
-  node scripts/compress-livephoto.mjs .attachments/2026/05 -o compressed/
-  node scripts/compress-livephoto.mjs photo.jpg --overwrite --video-height 720
+  bun scripts/compress-livephoto.ts photo.jpg
+  bun scripts/compress-livephoto.ts .attachments/2026/05 -o compressed/
+  bun scripts/compress-livephoto.ts photo.jpg --overwrite --video-height 720
 `;
 
 // ---------- 参数解析 ----------
@@ -379,7 +379,7 @@ async function main() {
       console.error("  请先创建该目录并把待压缩的实况照片放进去:");
       console.error(`    mkdir ${opts.input}`);
       console.error(`    (然后将 .jpg/.jpeg 文件拖入 ${opts.input})`);
-      console.error("  或显式指定路径: node scripts/compress-livephoto.mjs <文件或目录>");
+      console.error("  或显式指定路径: bun scripts/compress-livephoto.ts <文件或目录>");
       exit(1);
     }
     console.error(`✘ 输入路径不存在: ${opts.input}`);

@@ -65,7 +65,7 @@ const pageTitle = computed(() => {
 
 // 更新页面标题
 useHead({
-  title: computed(() => `${pageTitle.value} - ${siteConfig.siteName}后台管理`),
+  title: computed(() => `${pageTitle.value} - ${siteConfig.site.name}后台管理`),
 })
 
 // 注意：会话验证已在 app/middleware/auth.global.ts 中处理

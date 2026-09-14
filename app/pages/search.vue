@@ -11,7 +11,7 @@ const router = useRouter();
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 
 // 搜索关键词：初始值取自 URL 的 q。
 const initialQ = (route.query.q as string) || "";
@@ -104,8 +104,8 @@ const isHydrated = ref(false);
 // 页面元数据
 usePageSeo({
   title: computed(() => `${searchKeyword.value ? `"${searchKeyword.value}" 的搜索结果` : "搜索"} - ${siteName.value}`),
-  description: siteConfig.pageSeo.search.description,
-  keywords: siteConfig.pageSeo.search.keywords,
+  description: siteConfig.seo.pages.search.description,
+  keywords: siteConfig.seo.pages.search.keywords,
 });
 
 // 搜索防抖：输入框每次按键都触发 watch，直接 refresh 会逐字符打 DB LIKE，造成布局抖动；

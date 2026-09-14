@@ -11,8 +11,8 @@ export default defineNuxtPlugin(() => {
     return;
   }
 
-  // 直接读 siteConfig.rootDomain（不再经 runtimeConfig.public.rootDomain）
-  const rootDomain = siteConfig.rootDomain;
+  // 直接读 siteConfig.site.rootDomain（不再经 runtimeConfig.public.rootDomain）
+  const rootDomain = siteConfig.site.rootDomain;
 
   // 如果未配置 rootDomain，则不启用防护
   if (!rootDomain) {

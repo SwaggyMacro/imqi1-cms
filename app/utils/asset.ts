@@ -35,9 +35,9 @@ export function publicAsset(input?: string | null, options: PublicAssetOptions =
   const isStatic = STATIC_ASSET_RE.test(input) || STATIC_ASSET_FILE_RE.test(input);
   if (!isStatic) return input;
 
-  // 直接读 siteConfig.cdnUrl（不再经 runtimeConfig.public.cdnBase）。
+  // 直接读 siteConfig.site.cdnUrl（不再经 runtimeConfig.public.cdnBase）。
   // CDN 根与 nuxt.config 的 cdnBase 同值；|| "" 兜底保持「未配置 CDN」时返回原路径。
-  const cdnBase = siteConfig.cdnUrl || "";
+  const cdnBase = siteConfig.site.cdnUrl || "";
 
   if (!cdnBase) return input;
   if (!import.meta.env?.PROD) return input;

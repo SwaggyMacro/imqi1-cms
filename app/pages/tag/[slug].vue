@@ -19,7 +19,7 @@ const apiSlug = ref(slug.value);
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 const contentPageSize = computed(() => siteSettings.value?.contentPageSize || 12);
 
 // 从 URL query 参数中获取页码
@@ -235,8 +235,8 @@ usePageSeo({
     if (isNotFound.value) return `标签不存在 - ${siteName.value}`;
     return `标签 ${tag.value?.name} - ${siteName.value}`;
   }),
-  description: computed(() => (tag.value ? siteConfig.pageSeo.tag.description(tag.value.name) : "")),
-  keywords: computed(() => (tag.value ? siteConfig.pageSeo.tag.keywords(tag.value.name) : "")),
+  description: computed(() => (tag.value ? siteConfig.seo.pages.tag.description(tag.value.name) : "")),
+  keywords: computed(() => (tag.value ? siteConfig.seo.pages.tag.keywords(tag.value.name) : "")),
 });
 
 // 初始化渐入动画

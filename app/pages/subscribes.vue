@@ -7,7 +7,7 @@ import type {SubscribeSource} from "~/types/apis/subscribes";
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 const feedCacheInterval = computed(() => siteSettings.value?.feedCacheInterval || 8);
 
 // 使用全局认证状态
@@ -15,8 +15,8 @@ const { isLoggedIn, isLoadingAuth } = useAuth();
 
 usePageSeo({
   title: computed(() => `我的订阅 - ${siteName.value}`),
-  description: siteConfig.pageSeo.subscribes.description,
-  keywords: siteConfig.pageSeo.subscribes.keywords,
+  description: siteConfig.seo.pages.subscribes.description,
+  keywords: siteConfig.seo.pages.subscribes.keywords,
 });
 
 // 顶层 await useFetch：数据在挂载前（旧页面渐出期间）就绪，配合 Suspense 让旧页面完整渐出，渐入时直接带数据。

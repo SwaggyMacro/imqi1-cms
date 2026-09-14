@@ -67,7 +67,7 @@ const mergedPages = computed(() => {
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 
 // 水合完成前，相对时间（基于 now）在服务端与客户端会算出不同文本，导致 hydration mismatch；
 // 用 isHydrated 门控：水合前一律输出稳定的绝对日期，水合后再切换为「x分钟前」
@@ -112,8 +112,8 @@ function formatDateTime(date: string | Date): string {
 
 usePageSeo({
   title: computed(() => `站点地图 - ${siteName.value}`),
-  description: siteConfig.pageSeo.sitemap.description,
-  keywords: siteConfig.pageSeo.sitemap.keywords,
+  description: siteConfig.seo.pages.sitemap.description,
+  keywords: siteConfig.seo.pages.sitemap.keywords,
 });
 </script>
 

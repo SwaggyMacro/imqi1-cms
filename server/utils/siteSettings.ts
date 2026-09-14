@@ -5,11 +5,11 @@ import { siteConfig } from "~~/site.config";
 
 // 站点公共设置的强类型默认值
 const defaults: SiteSettings = {
-  siteName: siteConfig.siteName,
-  siteUrl: siteConfig.siteUrl,
+  siteName: siteConfig.site.name,
+  siteUrl: siteConfig.site.url,
   siteDesc: siteConfig.seo.description,
   siteIcp: "",
-  homeCustomText: siteConfig.homeCustomText,
+  homeCustomText: siteConfig.pages.homeCustomText,
   photoCategorySlug: "shot",
   commentEnabled: true,
   commentAvatarService: "gravatar",

@@ -3,7 +3,7 @@ import { siteConfig } from "~~/site.config";
 // CSP 中使用的 CDN 源：未配置有效 http(s) 前缀时回退为空字符串，
 // 避免拼出字面量 "undefined" 使对应指令失效
 const cdnSrc =
-  siteConfig.cdnUrl && siteConfig.cdnUrl.startsWith("http") ? siteConfig.cdnUrl : "";
+  siteConfig.site.cdnUrl && siteConfig.site.cdnUrl.startsWith("http") ? siteConfig.site.cdnUrl : "";
 
 /** 把指令名与一组来源拼成单条指令，过滤掉空来源（CDN 未配置时） */
 function dir(name: string, ...sources: string[]): string {

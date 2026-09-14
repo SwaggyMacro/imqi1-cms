@@ -9,7 +9,7 @@ const route = useRoute();
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 
 // 获取协议页面数据
 const { data, pending, error, refresh } = await useFetch("/api/page/agreement", {
@@ -177,8 +177,8 @@ watch(
 
 usePageSeo({
   title: pageTitle,
-  description: siteConfig.pageSeo.agreement.description,
-  keywords: siteConfig.pageSeo.agreement.keywords,
+  description: siteConfig.seo.pages.agreement.description,
+  keywords: siteConfig.seo.pages.agreement.keywords,
 });
 
 // 监听路由 hash 变化

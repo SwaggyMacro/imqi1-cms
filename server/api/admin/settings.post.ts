@@ -70,8 +70,8 @@ export default defineEventHandler(async event => {
 
   try {
     const updates = [
-      { key: "siteName", value: settingsData.siteName ?? siteConfig.siteName },
-      { key: "siteUrl", value: settingsData.siteUrl ?? siteConfig.siteUrl },
+      { key: "siteName", value: settingsData.siteName ?? siteConfig.site.name },
+      { key: "siteUrl", value: settingsData.siteUrl ?? siteConfig.site.url },
       { key: "siteDesc", value: settingsData.siteDesc ?? siteConfig.seo.description },
       { key: "siteIcp", value: settingsData.siteIcp ?? "" },
       { key: "commentEnabled", value: String(settingsData.commentEnabled ?? true) },
@@ -84,7 +84,7 @@ export default defineEventHandler(async event => {
       { key: "commentInterval", value: String(settingsData.commentInterval ?? 60) },
       { key: "contentPageSize", value: String(settingsData.contentPageSize ?? 12) },
       { key: "feedCacheInterval", value: String(settingsData.feedCacheInterval ?? 8) },
-      { key: "homeCustomText", value: settingsData.homeCustomText ?? siteConfig.homeCustomText },
+      { key: "homeCustomText", value: settingsData.homeCustomText ?? siteConfig.pages.homeCustomText },
       { key: "musicPlaylistId", value: settingsData.musicPlaylistId ?? "9255074836 || netease" },
       { key: "photoCategorySlug", value: settingsData.photoCategorySlug ?? "shot" },
       { key: "moderationApiType", value: String(settingsData.moderationApiType ?? "1") },

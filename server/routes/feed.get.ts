@@ -88,15 +88,15 @@ export default defineEventHandler(async event => {
       infoMap[item.key] = item.value;
     });
 
-    const siteName = infoMap["siteName"] || siteConfig.siteName;
-    const siteUrl = infoMap["siteUrl"] || siteConfig.siteUrl;
+    const siteName = infoMap["siteName"] || siteConfig.site.name;
+    const siteUrl = infoMap["siteUrl"] || siteConfig.site.url;
     const siteDesc = infoMap["siteDesc"] || siteConfig.seo.description;
 
-    // 站点根地址：只用配置（DB siteUrl → siteConfig.siteUrl），不信任客户端 Host 头，
+    // 站点根地址：只用配置（DB siteUrl → siteConfig.site.url），不信任客户端 Host 头，
     // 防 Host 注入生成任意绝对 URL 污染 feed 内 link/guid。
     let baseUrl = siteUrl;
     if (!baseUrl) {
-      const rootDomain = siteConfig.rootDomain || "";
+      const rootDomain = siteConfig.site.rootDomain || "";
       if (rootDomain) {
         const protocol = rootDomain.includes("localhost") ? "http" : "https";
         baseUrl = `${protocol}://${rootDomain}`;

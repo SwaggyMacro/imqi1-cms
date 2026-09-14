@@ -18,14 +18,14 @@
         <div class="pl-8">
           <div
             class="w-48 h-48 rounded-full border-6 border-slate-100 dark:border-slate-700 shadow-lg overflow-hidden mb-8 transition-colors duration-300">
-            <img :src="siteConfig.siteAvatarPath" :alt="siteConfig.ownerName" class="w-full h-full object-cover" >
+            <img :src="siteConfig.site.avatarPath" :alt="siteConfig.site.ownerName" class="w-full h-full object-cover" >
           </div>
           <div
             class="text-slate-900 dark:text-slate-100 text-[clamp(3rem,8vw,6rem)] font-black tracking-tight leading-[.9] mb-4 transition-colors duration-300">
-            {{ siteConfig.ownerName }}
+            {{ siteConfig.site.ownerName }}
           </div>
           <p class="text-slate-600 dark:text-slate-400 text-lg leading-relaxed max-w-xs transition-colors duration-300">
-            {{ siteConfig.links.profile.siteDescription }}
+            {{ siteConfig.pages.links.profile.siteDescription }}
           </p>
         </div>
         <div class="pb-8 text-right max-md:text-left">
@@ -373,13 +373,13 @@
         <p class="text-slate-600 dark:text-slate-400 text-lg mb-6 transition-colors duration-300">欢迎与我交流技术和生活</p>
         <div class="flex flex-wrap gap-4">
           <a
-            :href="siteConfig.social.find(item => item.name === '邮箱')?.link || '#'"
+            :href="siteConfig.pages.aboutLinks.email"
             class="pointer-events-auto flex items-center bg-blue-600 dark:bg-blue-500 border border-slate-200 dark:border-slate-700 rounded-full text-white font-semibold gap-3 px-8 py-4 transition-all duration-200 hover:bg-blue-500 dark:hover:bg-blue-400 hover:shadow">
             <Icon name="ri:mail-line" class="size-4 text-white" mode="svg" />
             发邮件
           </a>
           <a
-            :href="siteConfig.social.find(item => item.name === '个人网站')?.link || '#'"
+            :href="siteConfig.pages.aboutLinks.website"
             target="_blank"
             class="pointer-events-auto flex items-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-slate-800 dark:text-slate-200 font-semibold gap-3 px-8 py-4 transition-all duration-200 hover:bg-blue-600 dark:hover:bg-blue-500 hover:shadow hover:text-white group">
             <Icon
@@ -389,7 +389,7 @@
             主页
           </a>
           <a
-            :href="siteConfig.social.find(item => item.name === 'Github')?.link || '#'"
+            :href="siteConfig.pages.aboutLinks.github"
             target="_blank"
             class="pointer-events-auto flex items-center bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full text-slate-800 dark:text-slate-200 font-semibold gap-3 px-8 py-4 transition-all duration-200 hover:bg-blue-600 dark:hover:bg-blue-500 hover:shadow hover:text-white group">
             <Icon
@@ -554,13 +554,13 @@ import { siteConfig } from "~~/site.config";
 
 // 使用全局站点设置
 const { siteSettings, buildHash } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 
 // 十年之约入口链接（取自 site.config.ts 的 blogOrganizations，避免硬编码）
-const tenYearPledgeUrl = computed(() => siteConfig.links.blogOrganizations.find(o => o.name === "十年之约")?.url || "https://www.foreverblog.cn/");
+const tenYearPledgeUrl = computed(() => siteConfig.pages.links.blogOrganizations.find(o => o.name === "十年之约")?.url || "https://www.foreverblog.cn/");
 
 // 装饰性品牌文字（站点域名大写形式）
-const brandDomain = new URL(siteConfig.siteUrl).host.toUpperCase();
+const brandDomain = new URL(siteConfig.site.url).host.toUpperCase();
 
 // 注入页面加载状态
 const pageLoading = inject<Ref<boolean>>("pageLoading", ref(false));
@@ -736,8 +736,8 @@ const stats = computed(() => ({
 // 页面元数据
 usePageSeo({
   title: computed(() => `关于 - ${siteName.value}`),
-  description: siteConfig.pageSeo.about.description,
-  keywords: siteConfig.pageSeo.about.keywords,
+  description: siteConfig.seo.pages.about.description,
+  keywords: siteConfig.seo.pages.about.keywords,
 });
 
 // 动画用的统计数据

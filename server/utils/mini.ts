@@ -9,7 +9,7 @@ export function toAbsoluteUrl(url: string, origin: string) {
     return new URL(url).href;
   } catch {
     const base = process.env.NODE_ENV === "production"
-      ? siteConfig.cdnUrl || siteConfig.siteUrl
+      ? siteConfig.site.cdnUrl || siteConfig.site.url
       : origin;
 
     return new URL(url.startsWith("/") ? url : `/${url}`, base).href;

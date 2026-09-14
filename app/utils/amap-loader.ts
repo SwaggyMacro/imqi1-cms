@@ -53,7 +53,7 @@ async function loadMissingPlugins(_AMap: typeof AMap, plugins: string[]) {
 export async function resolveAmapClientConfig(): Promise<AmapClientConfig> {
   // 不再经 runtimeConfig.public.amapUseServerProxy：客户端等价判定 = 生产 && 站点开启服务端代理。
   // 与 shared/amap-runtime.ts 的 resolveAmapUseProxy(nodeEnv!=="production"→false) 语义一致。
-  const useProxy = Boolean(import.meta.env?.PROD && siteConfig.amap.useServerProxy);
+  const useProxy = Boolean(import.meta.env?.PROD && siteConfig.features.amap.useServerProxy);
   if (useProxy) {
     return { useProxy, key: "", securityJsCode: "" };
   }

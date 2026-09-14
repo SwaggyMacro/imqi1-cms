@@ -134,7 +134,7 @@ export default defineEventHandler(async event => {
     });
 
     const linkAutoApprove = settingsMap["linkAutoApprove"] === "true";
-    const siteUrl = settingsMap["siteUrl"] || siteConfig.siteUrl;
+    const siteUrl = settingsMap["siteUrl"] || siteConfig.site.url;
 
     // 判断是否强制提交（跳过检测，直接进入待审核）
     const forceSubmit = body.forceSubmit === true;

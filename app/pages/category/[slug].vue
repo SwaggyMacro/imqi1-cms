@@ -20,7 +20,7 @@ const apiSlug = ref(slug.value);
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 const photoCategorySlug = computed(() => siteSettings.value?.photoCategorySlug || "shot");
 const contentPageSize = computed(() => siteSettings.value?.contentPageSize || 12);
 
@@ -297,8 +297,8 @@ usePageSeo({
     if (isNotFound.value) return `分类不存在 - ${siteName.value}`;
     return `分类 ${category.value?.name} - ${siteName.value}`;
   }),
-  description: computed(() => (category.value ? siteConfig.pageSeo.category.description(category.value.name, category.value.desc ?? "") : "")),
-  keywords: computed(() => (category.value ? siteConfig.pageSeo.category.keywords(category.value.name, category.value.desc ?? "") : "")),
+  description: computed(() => (category.value ? siteConfig.seo.pages.category.description(category.value.name, category.value.desc ?? "") : "")),
+  keywords: computed(() => (category.value ? siteConfig.seo.pages.category.keywords(category.value.name, category.value.desc ?? "") : "")),
 });
 
 // 初始化渐入动画

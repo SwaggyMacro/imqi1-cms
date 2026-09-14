@@ -225,9 +225,9 @@ async function getSiteInfo() {
   const get = (key: string) => settings.find(s => s.key === key)?.value || "";
 
   return {
-    name: get("siteName") || siteConfig.siteName,
+    name: get("siteName") || siteConfig.site.name,
     // 去掉尾部斜杠，避免拼出 /content/... 前多一个 '/'（如 siteUrl 写成 https://x.com/）
-    url: (get("siteUrl") || siteConfig.siteUrl).replace(/\/+$/, ""),
+    url: (get("siteUrl") || siteConfig.site.url).replace(/\/+$/, ""),
   };
 }
 

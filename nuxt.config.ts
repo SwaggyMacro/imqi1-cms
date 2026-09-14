@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 
 import { visualizer } from "rollup-plugin-visualizer";
 
-import { siteConfig, fullOgImage } from "./site.config";
+import { siteConfig } from "./site.config";
 import { getRedisConfig } from "./shared/redis-config";
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -26,9 +26,9 @@ const buildHash = genBuildHash();
 // 仅生产用 hash 作 CDN 资产目录;开发模式 buildHashDir 为空(资产走本地 _nuxt/,与旧版无 hash 文件一致)
 const buildHashDir = isProduction ? `/static/${buildHash}` : "";
 
-const hasCdn = siteConfig.cdnUrl && siteConfig.cdnUrl.startsWith("http");
-const cdnURL = isProduction && hasCdn ? `${siteConfig.cdnUrl}${buildHashDir}` : siteConfig.cdnUrl;
-const publicCdnAsset = (p: string) => (isProduction && hasCdn ? `${siteConfig.cdnUrl}${p}` : p);
+const hasCdn = siteConfig.site.cdnUrl && siteConfig.site.cdnUrl.startsWith("http");
+const cdnURL = isProduction && hasCdn ? `${siteConfig.site.cdnUrl}${buildHashDir}` : siteConfig.site.cdnUrl;
+const publicCdnAsset = (p: string) => (isProduction && hasCdn ? `${siteConfig.site.cdnUrl}${p}` : p);
 // CSP 已改为运行时按每请求 nonce 生成、通过 HTTP 响应头投递（不再用静态 <meta>），
 // 见 server/utils/csp.ts（策略拼装）+ server/plugins/csp.ts（render:response 注入 nonce 与设头）
 const nitroIgnore = siteConfig.features.miniApi ? [] : ["api/mini/**"];
@@ -78,7 +78,7 @@ export default defineNuxtConfig({
     redis: redisConfig ?? { host: "", port: 0, db: 0, lazyConnect: false },
     // 非 public：仅服务端可读，不进 __NUXT__（浏览器拿不到）。高德是否走服务端代理，
     // 仅生产且站点开启代理时为 true；服务端 _AMapService / amap/config 据此放行。
-    amapUseServerProxy: isProduction && siteConfig.amap.useServerProxy,
+    amapUseServerProxy: isProduction && siteConfig.features.amap.useServerProxy,
     // 非 public 构建哈希：仅服务端 / 部署脚本可读，不进 __NUXT__；
     // 由 /api/site 下发，前端 useSiteSettings 内 getBuildHash 缓存供 meta/页脚/后台展示。
     buildHash: buildHash,
@@ -274,11 +274,11 @@ export default defineNuxtConfig({
       link: [
         {
           rel: "preconnect",
-          href: siteConfig.cdnUrl,
+          href: siteConfig.site.cdnUrl,
         },
         {
           rel: "dns-prefetch",
-          href: siteConfig.cdnUrl,
+          href: siteConfig.site.cdnUrl,
         },
         // RSS 订阅
         {
@@ -318,16 +318,16 @@ export default defineNuxtConfig({
         // 基础元信息
         {
           name: "author",
-          content: siteConfig.siteName,
+          content: siteConfig.site.name,
         },
         // Open Graph（仅全局静态项，title/description 由各页面 usePageSeo 设置）
         {
           property: "og:site_name",
-          content: siteConfig.siteName,
+          content: siteConfig.site.name,
         },
         {
           property: "og:image",
-          content: fullOgImage,
+          content: siteConfig.seo.ogImage,
         },
         {
           property: "og:locale",
@@ -340,7 +340,7 @@ export default defineNuxtConfig({
         },
         {
           name: "twitter:image",
-          content: fullOgImage,
+          content: siteConfig.seo.ogImage,
         },
         {
           name: "twitter:site",
@@ -843,17 +843,17 @@ export default defineNuxtConfig({
     // ========== 静态资源 CDN 重定向配置 ==========
     // 只有生产环境且配置了 CDN 时才启用重定向
     // 避免服务器处理文件不存在的请求，节省服务器资源
-    ...(isProduction && siteConfig.cdnUrl && siteConfig.cdnUrl.startsWith("http")
+    ...(isProduction && siteConfig.site.cdnUrl && siteConfig.site.cdnUrl.startsWith("http")
       ? {
           "/favicon.ico": {
             redirect: {
-              to: `${siteConfig.cdnUrl}/favicon.ico`,
+              to: `${siteConfig.site.cdnUrl}/favicon.ico`,
               statusCode: 301,
             },
           },
           "/manifest.webmanifest": {
             redirect: {
-              to: `${siteConfig.cdnUrl}/manifest.webmanifest`,
+              to: `${siteConfig.site.cdnUrl}/manifest.webmanifest`,
               statusCode: 301,
             },
           },
@@ -861,37 +861,37 @@ export default defineNuxtConfig({
           // Nitro 直接返回——否则规则只对 CDN 子域生效，对本站失效。
           "/imgs/**": {
             redirect: {
-              to: `${siteConfig.cdnUrl}/imgs/**`,
+              to: `${siteConfig.site.cdnUrl}/imgs/**`,
               statusCode: 301,
             },
           },
           "/skills/**": {
             redirect: {
-              to: `${siteConfig.cdnUrl}/skills/**`,
+              to: `${siteConfig.site.cdnUrl}/skills/**`,
               statusCode: 301,
             },
           },
           "/icons/**": {
             redirect: {
-              to: `${siteConfig.cdnUrl}/icons/**`,
+              to: `${siteConfig.site.cdnUrl}/icons/**`,
               statusCode: 301,
             },
           },
           "/fonts/**": {
             redirect: {
-              to: `${siteConfig.cdnUrl}/fonts/**`,
+              to: `${siteConfig.site.cdnUrl}/fonts/**`,
               statusCode: 301,
             },
           },
           "/emojis/**": {
             redirect: {
-              to: `${siteConfig.cdnUrl}/emojis/**`,
+              to: `${siteConfig.site.cdnUrl}/emojis/**`,
               statusCode: 301,
             },
           },
           "/uploads/**": {
             redirect: {
-              to: `${siteConfig.cdnUrl}/uploads/**`,
+              to: `${siteConfig.site.cdnUrl}/uploads/**`,
               statusCode: 301,
             },
           },

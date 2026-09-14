@@ -6,9 +6,9 @@ const route = useRoute();
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 // 站点配置的固定域名 host（如 imqi1.com），用于首页胶囊标题的"站点名 - 域名host"
-const siteHost = siteConfig.rootDomain;
+const siteHost = siteConfig.site.rootDomain;
 
 // 获取页面标题（从页面组件设置）
 const { getPageTitle, getPageIcon, getPageCategory } = usePageTitle();

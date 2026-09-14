@@ -171,7 +171,7 @@ const findMarkdownImageDimensions = (url: string): MarkdownImageDimensions => {
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 const commentEnabled = computed(() => siteSettings.value?.commentEnabled ?? true);
 
 // 使用全局认证状态
@@ -353,12 +353,12 @@ const seoMeta = computed(() => {
   if (!content.value) return { title: pageTitle.value };
 
   // 统一用站点 URL + 路由路径：og:url / canonical 必须稳定，不应随客户端 query/hash 变化
-  const fullUrl = `${siteConfig.siteUrl}${route.path}`;
+  const fullUrl = `${siteConfig.site.url}${route.path}`;
 
   const keywords = tags.value.map(tag => tag.name).join(", ");
   const description = content.value.desc || "";
   const coverImage = firstCoverUrl.value;
-  const authorName = content.value.user?.nickname || content.value.user?.name || siteConfig.siteName;
+  const authorName = content.value.user?.nickname || content.value.user?.name || siteConfig.site.name;
   const publishDate = content.value.create_time || content.value.update_time;
   const modifyDate = content.value.update_time;
 
@@ -412,7 +412,7 @@ const seoMeta = computed(() => {
 useHead(() => seoMeta.value);
 
 // 文章手机端扫码查看：复用 /api/qr 通用接口，QR 内容为规范 URL
-const articleQr = computed(() => `/api/qr?text=${encodeURIComponent(`${siteConfig.siteUrl}${route.path}`)}`);
+const articleQr = computed(() => `/api/qr?text=${encodeURIComponent(`${siteConfig.site.url}${route.path}`)}`);
 
 // 小程序码（「文章小程序端看」）：懒加载，避免每篇都调微信 API；出错自动隐藏
 // 注意走公开 /api/qrcode（/api/mini/* 在会签 HMAC 鉴权，主站 <img> 无签名会 401）

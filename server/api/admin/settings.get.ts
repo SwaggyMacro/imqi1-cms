@@ -29,8 +29,8 @@ export default defineEventHandler(async event => {
 
     // 默认值
     const defaults: Record<string, string | number | boolean> = {
-      siteName: siteConfig.siteName,
-      siteUrl: siteConfig.siteUrl,
+      siteName: siteConfig.site.name,
+      siteUrl: siteConfig.site.url,
       siteDesc: siteConfig.seo.description,
       siteIcp: "",
       commentEnabled: true,
@@ -43,7 +43,7 @@ export default defineEventHandler(async event => {
       commentInterval: 60,
       contentPageSize: 12,
       feedCacheInterval: 8,
-      homeCustomText: siteConfig.homeCustomText,
+      homeCustomText: siteConfig.pages.homeCustomText,
       musicPlaylistId: "9255074836 || netease",
       photoCategorySlug: "shot",
       moderationApiType: "1",

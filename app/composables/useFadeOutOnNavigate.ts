@@ -17,7 +17,7 @@ import { siteConfig } from "~~/site.config";
 export function useFadeOutOnNavigate(): Promise<void> {
   const nuxtApp = useNuxtApp();
   if (import.meta.client && !nuxtApp.isHydrating) {
-    return new Promise(resolve => setTimeout(resolve, siteConfig.pageTransition.fadeDuration));
+    return new Promise(resolve => setTimeout(resolve, siteConfig.pages.transition.fadeDuration));
   }
   return Promise.resolve();
 }

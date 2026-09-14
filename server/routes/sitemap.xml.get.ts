@@ -3,7 +3,7 @@ import { escapeXml } from "#server/utils/xml";
 import { siteConfig } from "~~/site.config";
 
 // 站点根 URL 一律取自配置的 siteUrl（绝不取客户端 Host 头，防 host 投毒）。
-const baseUrl = siteConfig.siteUrl.replace(/\/$/, "");
+const baseUrl = siteConfig.site.url.replace(/\/$/, "");
 
 export default defineEventHandler(async event => {
   try {

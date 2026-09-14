@@ -25,10 +25,10 @@ const isPageTransitioning = ref(false);
 const mainOpacity = ref(1);
 // 渐出/渐入的位移量：非「全屏固定页」间导航叠加（首页 hero fixed 视差 / 地图全屏 section，由 navSkipsTranslate 控制跳过）
 const mainTranslateY = ref(0);
-const TRANSLATE_Y = siteConfig.pageTransition.translateY;
+const TRANSLATE_Y = siteConfig.pages.transition.translateY;
 let transitionStartTime = 0;
 let fadeOutTimer: ReturnType<typeof setTimeout> | null = null;
-const FADE_OUT_DURATION = siteConfig.pageTransition.fadeDuration; // 淡出动画时长
+const FADE_OUT_DURATION = siteConfig.pages.transition.fadeDuration; // 淡出动画时长
 
 // 监听页面开始加载
 const nuxtApp = useNuxtApp();
@@ -160,7 +160,7 @@ nuxtApp.hook("page:finish", () => {
 provide("pageLoading", readonly(showPageLoading));
 
 // 全局 SEO 元信息（仅动态内容）
-const siteUrl = siteConfig.siteUrl;
+const siteUrl = siteConfig.site.url;
 
 useHead({
   link: [
@@ -310,7 +310,7 @@ onMounted(() => {
         tabindex="-1"
         class="bg-white dark:bg-slate-950 flex pt-20 px-5 pb-10 grow z-1"
         :style="{
-          transition: `opacity ${siteConfig.pageTransition.fadeDuration}ms ease, transform ${siteConfig.pageTransition.fadeDuration}ms ease`,
+          transition: `opacity ${siteConfig.pages.transition.fadeDuration}ms ease, transform ${siteConfig.pages.transition.fadeDuration}ms ease`,
           opacity: mainOpacity,
           // 位移为 0 时不渲染 transform（避免稳态 translateY(0) 创建包含块破坏后代 fixed 定位）
           transform: mainTranslateY ? `translateY(${mainTranslateY}px)` : undefined,

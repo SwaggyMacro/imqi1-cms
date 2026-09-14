@@ -17,7 +17,7 @@
         <!-- 头像区域 -->
         <div class="h-fit max-md:hidden">
           <img
-            :src="siteConfig.siteAvatarPath"
+            :src="siteConfig.site.avatarPath"
             alt="头像"
             fetchpriority="high"
             class="rounded-full max-w-50 w-50 h-50 object-cover max-md:max-w-30 max-md:w-30 max-md:h-30" >
@@ -863,7 +863,7 @@ const { data: homeData } = await useFetch("/api/home-data", {
 
 // 站点信息
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 
 // 分类信息
 const categories = computed(() => homeData.value?.data?.categories || []);
@@ -969,19 +969,19 @@ function formatChangelogDate(date: string | Date): string {
 // 页面元数据
 usePageSeo({
   title: siteName,
-  description: siteConfig.pageSeo.home.description,
-  keywords: siteConfig.pageSeo.home.keywords,
+  description: siteConfig.seo.pages.home.description,
+  keywords: siteConfig.seo.pages.home.keywords,
 });
 
 // 首页Hero下文字
-const homeAnnounce = computed(() => siteSettings.value?.homeCustomText || siteConfig.homeCustomText);
+const homeAnnounce = computed(() => siteSettings.value?.homeCustomText || siteConfig.pages.homeCustomText);
 
 // 图片分类slug
 const photoCategorySlug = computed(() => homeData.value?.data?.site?.photoCategorySlug || "shot");
 
 // 联系链接配置
-// siteConfig.social 是模块级常量,不会响应式变化,无需 ref 包装。
-const contactLinks = siteConfig.social;
+// siteConfig.pages.homeLinks 是模块级常量,不会响应式变化,无需 ref 包装。
+const contactLinks = siteConfig.pages.homeLinks;
 
 const themeItems = computed<ThemeCardItem[]>(() => [
   {

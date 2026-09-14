@@ -12,13 +12,13 @@ const { data, pending, error } = await useFetch("/api/archiving", {
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 
 // 页面元数据
 usePageSeo({
   title: computed(() => `文章归档 - ${siteName.value}`),
-  description: siteConfig.pageSeo.archiving.description,
-  keywords: siteConfig.pageSeo.archiving.keywords,
+  description: siteConfig.seo.pages.archiving.description,
+  keywords: siteConfig.seo.pages.archiving.keywords,
 });
 
 // 格式化日期

@@ -14,7 +14,7 @@ const { data, pending, error } = await useFetch<{ data: ChangelogGroup[] }>("/ap
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 
 // 使用全局认证状态
 const { isLoggedIn, isLoadingAuth } = useAuth();
@@ -151,8 +151,8 @@ onUnmounted(() => {
 // 页面元数据
 usePageSeo({
   title: computed(() => `更新日志 - ${siteName.value}`),
-  description: siteConfig.pageSeo.changelogs.description,
-  keywords: siteConfig.pageSeo.changelogs.keywords,
+  description: siteConfig.seo.pages.changelogs.description,
+  keywords: siteConfig.seo.pages.changelogs.keywords,
 });
 </script>
 

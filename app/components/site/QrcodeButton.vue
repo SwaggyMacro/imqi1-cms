@@ -20,19 +20,15 @@
 import { ref } from "vue";
 import { useEventListener } from "@vueuse/core";
 
-import type { SiteConfig } from "~~/lib/site-config";
+import type { HomeLinkItem } from "~~/lib/site-config";
 
-// social 元素类型直接从 SiteConfig["social"] 索引派生,
-// 保持与 lib/site-config.ts 同源,避免在多份地方重复定义形状。
-type SocialItem = NonNullable<SiteConfig["social"]>[number];
-
-const props = defineProps<{ link: SocialItem }>();
+const props = defineProps<{ link: HomeLinkItem }>();
 
 // 弹层是否展开。组件实例独立持有(open 不外露),多个 QrcodeButton 互不干扰。
 const open = ref(false);
 const buttonRef = ref<HTMLButtonElement | null>(null);
 
-// popoverId 与 button 节点 id 都用 social.name 做后缀(name 已天然唯一,与 v-for :key 一致)
+// popoverId 与 button 节点 id 都用 link.name 做后缀(name 已天然唯一,与 v-for :key 一致)
 const popoverId = `qrcode-popover-${props.link.name}`;
 
 const toggleQrcode = () => {

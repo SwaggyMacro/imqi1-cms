@@ -8,11 +8,11 @@ import { siteConfig } from "~~/site.config";
 
 // 默认值配置
 const defaults: Record<string, string | number | boolean> = {
-  siteName: siteConfig.siteName,
-  siteUrl: siteConfig.siteUrl,
+  siteName: siteConfig.site.name,
+  siteUrl: siteConfig.site.url,
   siteDesc: siteConfig.seo.description,
   siteIcp: "",
-  homeCustomText: siteConfig.homeCustomText,
+  homeCustomText: siteConfig.pages.homeCustomText,
   photoCategorySlug: "shot",
   commentEnabled: true,
   commentAvatarService: "gravatar",

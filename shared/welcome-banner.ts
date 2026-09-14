@@ -20,7 +20,7 @@ const ASCII_BANNER =
  */
 export function printWelcomeBanner(): void {
   console.log(
-    `%c ${siteConfig.siteName}欢迎你的来访。`,
+    `%c ${siteConfig.site.name}欢迎你的来访。`,
     "background: linear-gradient(270deg,#f9fafb,#eaecf0,#dddddd);padding:8px 15px;border-radius:8px;color:#222",
   );
   console.log(ASCII_BANNER);

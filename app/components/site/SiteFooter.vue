@@ -25,7 +25,7 @@ const isHomePage = computed(() => route.path === "/");
 // 地图中心页：页脚透明浮于全屏地图之上（地图底色非白即黑，主题色文字可直接显示）
 const isTravelPage = computed(() => route.path === "/map");
 
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 const siteIcp = computed(() => siteSettings.value?.siteIcp || "");
 
 const blogStackIcons: FooterIcon[] = [

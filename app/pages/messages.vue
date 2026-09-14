@@ -5,7 +5,7 @@ import { siteConfig } from "~~/site.config";
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 const commentEnabled = computed(() => siteSettings.value?.commentEnabled ?? true);
 
 // 获取留言板配置
@@ -67,8 +67,8 @@ watch(
 // 页面元数据
 usePageSeo({
   title: computed(() => `留言 - ${siteName.value}`),
-  description: siteConfig.pageSeo.messages.description,
-  keywords: siteConfig.pageSeo.messages.keywords,
+  description: siteConfig.seo.pages.messages.description,
+  keywords: siteConfig.seo.pages.messages.keywords,
 });
 
 const lightboxContainer = useTemplateRef<HTMLDivElement>("lightboxContainer");

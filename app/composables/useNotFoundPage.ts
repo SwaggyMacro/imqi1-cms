@@ -24,9 +24,9 @@ export function useNotFoundPage(): Promise<void> {
   setPageTitle("页面未找到", "ri:close-large-fill");
 
   usePageSeo({
-    title: `页面未找到 - ${siteConfig.siteName}`,
-    description: siteConfig.pageSeo.notFound.description,
-    keywords: siteConfig.pageSeo.notFound.keywords,
+    title: `页面未找到 - ${siteConfig.site.name}`,
+    description: siteConfig.seo.pages.notFound.description,
+    keywords: siteConfig.seo.pages.notFound.keywords,
   });
 
   // SPA 导航时挂起一个 fadeDuration，让 app.vue 旧页渐出完成后再挂载本页，

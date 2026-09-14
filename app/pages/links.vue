@@ -11,7 +11,7 @@ const { success, error: showError, } = useFrontNotification();
 
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
-const siteName = computed(() => siteSettings.value?.siteName || siteConfig.siteName);
+const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 
 // 是否显示友链地址输入框
 const showLinkUrlInput = computed(() => siteSettings.value?.linkAutoApprove === true);
@@ -213,8 +213,8 @@ const checkIfNeedAutoCheck = () => {
 // 页面元数据
 usePageSeo({
   title: computed(() => `友情链接 - ${siteName.value}`),
-  description: siteConfig.pageSeo.links.description,
-  keywords: siteConfig.pageSeo.links.keywords,
+  description: siteConfig.seo.pages.links.description,
+  keywords: siteConfig.seo.pages.links.keywords,
 });
 
 // 表单状态
@@ -593,7 +593,7 @@ onUnmounted(() => {
       <h2 class="text-xl font-bold mb-4">本站已加入的博客组织</h2>
       <div class="flex flex-wrap gap-4">
         <a
-          v-for="org in siteConfig.links.blogOrganizations"
+          v-for="org in siteConfig.pages.links.blogOrganizations"
           :key="org.name"
           :href="org.url"
           target="_blank"
@@ -617,21 +617,21 @@ onUnmounted(() => {
           <!-- 头像 -->
           <div class="shrink-0">
             <img
-              :src="siteConfig.links.profile.siteAvatar"
-              :alt="siteConfig.links.profile.siteName"
+              :src="siteConfig.pages.links.profile.siteAvatar"
+              :alt="siteConfig.pages.links.profile.siteName"
               class="w-20 h-20 rounded-xl object-cover cursor-context-menu" >
           </div>
           <!-- 信息 -->
           <div class="flex-1 space-y-1">
             <div>
-              <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ siteConfig.links.profile.siteName }}</h3>
-              <p class="text-slate-600 dark:text-slate-400 text-sm mt-1">{{ siteConfig.links.profile.siteDescription }}</p>
+              <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ siteConfig.pages.links.profile.siteName }}</h3>
+              <p class="text-slate-600 dark:text-slate-400 text-sm mt-1">{{ siteConfig.pages.links.profile.siteDescription }}</p>
             </div>
             <div class="flex flex-wrap gap-4 text-sm">
               <div class="flex items-center gap-2">
                 <Icon name="ri:link" class="text-blue-600" />
-                <a :href="siteConfig.links.profile.siteUrl" target="_blank" rel="noopener" class="text-blue-600 hover:underline">
-                  {{ siteConfig.links.profile.siteUrl }}
+                <a :href="siteConfig.pages.links.profile.siteUrl" target="_blank" rel="noopener" class="text-blue-600 hover:underline">
+                  {{ siteConfig.pages.links.profile.siteUrl }}
                 </a>
               </div>
             </div>

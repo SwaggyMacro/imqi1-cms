@@ -16,8 +16,8 @@ const props = defineProps<{
 // 站点总开关：未配置高德 apikey 的环境（如生产）可在 site.config.ts 的 amap.entryLinks 关闭，
 // 此时整站所有 MapEntryLinks 一律不渲染，避免出现指向「无法加载的地图页」的死链。
 const linksEnabled = import.meta.dev
-  ? siteConfig.amap.entryLinks.development
-  : siteConfig.amap.entryLinks.production;
+  ? siteConfig.features.amap.entryLinks.development
+  : siteConfig.features.amap.entryLinks.production;
 
 const MAP = {
   travels: { value: "travels", label: "我的足迹", icon: "ri:map-pin-line" },

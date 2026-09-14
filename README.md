@@ -317,7 +317,7 @@ UPLOADS_DIR="/www/wwwroot/your-site/uploads"
 
 # 高德地图，可选
 # key / securityCode 均为运行时读取，不烘焙进构建产物：
-# - 生产走服务端 nitro 代理（site.config 的 amap.useServerProxy=true）：浏览器不持 key，
+# - 生产走服务端 nitro 代理（site.config 的 amap.proxy=true）：浏览器不持 key，
 #   部署后在运行环境设置 AMAP_KEY / AMAP_SECURITY_CODE 即可生效，无需重新打包。
 # - 开发环境恒直连：浏览器需 key 加载高德 JS，开发运行时从环境变量读取。
 AMAP_KEY="your_amap_key"
@@ -533,7 +533,7 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 | 区 | 字段 | 说明 |
 | --- | --- | --- |
 | 站点基础设置 | `site.name` / `site.url` / `site.cdnUrl` / `site.rootDomain` | 站点名、访问地址、CDN 根地址与主域名。 |
-| | `site.avatarPath` / `site.ownerName` | 站点头像与站长名，头像自动带 CDN 前缀。站点图标（SVG）经 `seo.ogImage` 供 og:image 与页头 logo 使用。 |
+| | `site.avatarPath` / `site.ownerName` | 站点头像与站长名。站点图标（SVG）经 `seo.ogImage` 供 og:image 与页头 logo 使用。 |
 | 构建 | `build.brotliCompression` | 构建时是否预压缩静态资源为 brotli（`.br`），需 Nginx / CDN 配合发送预压缩文件。 |
 | | `build.redis` | Redis 连接配置（仅生产构建生效）。裸机部署改这里；Docker 由构建参数覆盖，改这里无效。 |
 | 安全 | `security.allowedRefererDomains` | 允许访问 `/api/*` 的 Referer 域名白名单（`/api/mini/*` 除外，走签名鉴权）。 |
@@ -547,7 +547,7 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 | | `pages.links` | 友链页的博客组织入口（`blogOrganizations`）与本站资料（`profile`，供他人添加友链）。 |
 | 功能 | `features.miniApi` / `features.miniComment` | 是否启用小程序 API / 小程序评论。 |
 | | `features.mobileQr` / `features.miniQr` | 文章页「本文可在【手机】上看」「【小程序】上看」入口开关。 |
-| | `features.amap` | 高德地图：`useServerProxy` 生产是否走服务端 nitro 代理路由 `/_AMapService`（开发恒直连）、`entryLinks` 是否展示地图入口胶囊（分开发 / 生产）。地图能否加载由运行时判断，key / securityCode 运行时从环境变量读取（不打包进产物），生产代理模式下浏览器不持 key。 |
+| | `features.amap` | 高德地图：`proxy` 生产是否走服务端 nitro 代理路由 `/_AMapService`（开发恒直连）、`entry` 是否展示地图入口胶囊。地图能否加载由运行时判断，key / securityCode 运行时从环境变量读取（不打包进产物），生产代理模式下浏览器不持 key。 |
 
 > 该文件是 CSP、SEO meta、CDN 前缀、Referer 白名单等构建时数据的来源（PWA manifest 不在此列，它是静态文件 `public/manifest.webmanifest`），务必在**打包前**配置好。修改后需重新 `bun run build` 才会生效。
 

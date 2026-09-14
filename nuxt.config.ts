@@ -81,7 +81,7 @@ export default defineNuxtConfig({
     redis: redisConfig ?? { host: "", port: 0, db: 0, lazyConnect: false },
     // 非 public：仅服务端可读，不进 __NUXT__（浏览器拿不到）。高德是否走服务端代理，
     // 仅生产且站点开启代理时为 true；服务端 _AMapService / amap/config 据此放行。
-    amapUseServerProxy: isProduction && siteConfig.features.amap.useServerProxy,
+    amapUseServerProxy: isProduction && siteConfig.features.amap.proxy,
     // 非 public 构建哈希：仅服务端 / 部署脚本可读，不进 __NUXT__；
     // 由 /api/site 下发，前端 useSiteSettings 内 getBuildHash 缓存供 meta/页脚/后台展示。
     buildHash: buildHash,

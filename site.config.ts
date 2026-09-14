@@ -222,11 +222,8 @@ export const siteConfig = defineSiteConfig({
     mobileQr: true,
     miniQr: true,
     amap: {
-      useServerProxy: true,
-      entryLinks: {
-        development: true,
-        production: true,
-      },
+      proxy: true,
+      entry: true,
     },
   },
 });

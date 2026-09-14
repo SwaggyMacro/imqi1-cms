@@ -1,5 +1,7 @@
 import type { H3Event } from "h3";
 
+import { matchIpPattern } from "./ip-match";
+
 /**
  * 解析客户端 IP。
  *
@@ -7,11 +9,12 @@ import type { H3Event } from "h3";
  * 直接用 socket 地址。否则任意客户端可伪造这些头绕过限流键 / 伪造评论入库 IP。
  *
  * 受信判定：对端 IP 为 loopback（本仓库生成式 nginx 就是本机反代，event.context.clientAddress 会是 127.0.0.1/::1），
- * 或在 `TRUSTED_PROXY` 环境变量白名单（逗号分隔，Docker 内网反代场景）。
+ * 或在 `TRUSTED_PROXY` 环境变量白名单（逗号分隔，支持单个 IP 或 CIDR 网段，如 `172.16.0.0/12`）。
  *
  * 部署注意：若站点挂在**非 loopback** 的反代（云 LB / docker 网桥 / 远程 nginx）之后，
- * 必须把该反代地址加入 `TRUSTED_PROXY`，否则头被忽略、所有访客 IP 塌缩成反代 IP
- * （评论入库 IP、足迹去重、限流键全部合并成同一个）。
+ * 必须把该反代地址（或所在网段）加入 `TRUSTED_PROXY`，否则头被忽略、所有访客 IP 塌缩成反代 IP
+ * （评论入库 IP、足迹去重、限流键全部合并成同一个）。Docker 端口映射下容器看到的对端是网桥网关
+ * （如 172.26.0.1），不是 loopback；而网段由 docker 动态分配、通不过固定 IP 匹配，故建议直接写网段。
  */
 function normalizeIp(v: string): string {
   return v.trim().toLowerCase();
@@ -24,11 +27,11 @@ function isLoopback(ip: string): boolean {
 function isTrustedProxy(peer: string): boolean {
   if (!peer) return false;
   if (isLoopback(peer)) return true;
-  const allow = (process.env.TRUSTED_PROXY || "")
+  return (process.env.TRUSTED_PROXY || "")
     .split(",")
-    .map((s) => normalizeIp(s))
-    .filter(Boolean);
-  return allow.includes(normalizeIp(peer));
+    .map(s => normalizeIp(s))
+    .filter(Boolean)
+    .some(entry => matchIpPattern(peer, entry));
 }
 
 export function getClientIp(event: H3Event): string {

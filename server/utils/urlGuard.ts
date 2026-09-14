@@ -1,6 +1,8 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
 
+import { expandIpv6 } from "./ip-match";
+
 /**
  * 补全链接协议：无 http(s):// 前缀时统一加 https://。
  * 用户填 "example.com" 若原样入库，前台 <a href> 会被当相对路径 → 跳到 /xxx/example.com 死链。
@@ -10,21 +12,6 @@ export function ensureUrlProtocol(rawUrl: string): string {
   if (!trimmed) return trimmed;
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://${trimmed}`;
-}
-
-// 展开 IPv6 为 8 组 16 位数字，便于按 CIDR 前缀判定。Node 的 WHATWG URL 会把 IPv4 映射地址
-// 规范化成十六进制（如 ::ffff:a9fe:a9fe），旧实现只按点分十进制 / fe80 前缀匹配会漏判（SSRF 绕过）。
-function expandIpv6(ip: string): number[] {
-  const lower = ip.toLowerCase();
-  const halves = lower.split("::");
-  if (halves.length > 2) return [];
-  const head = halves[0] ? halves[0].split(":") : [];
-  const tail = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
-  const missing = 8 - head.length - tail.length;
-  if (missing < 0) return [];
-  const all = head.concat(Array(missing).fill("0")).concat(tail);
-  if (all.length !== 8) return [];
-  return all.map(g => parseInt(g || "0", 16));
 }
 
 // 判断一个 IP 是否落在私有/环回/链路本地/保留段——这些地址不应被服务端 fetch 触达（SSRF 防护）

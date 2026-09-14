@@ -26,12 +26,12 @@ export default defineEventHandler(event => {
     return;
   }
 
-  // 优先检查：SSR 内部请求标识。未配置环境变量时回落默认值，确保 SSR 内部请求在缺配
-  // 环境下仍能通过 referer 门禁（与 app/utils/internal-request.ts 的 getInternalRequestHeaders 一致）。
-  // 运维可通过设置 SSR_INTERNAL_REQUEST_SECRET 覆盖默认值，换成随机长串以增强安全性。
-  // 应用层环境变量直接读 process.env，不经 Nuxt runtimeConfig 注入。
+  // 优先检查：SSR 内部请求标识。密钥由 server/plugins/ssr-internal-secret.ts 在进程启动时写入
+  // process.env（未配置 SSR_INTERNAL_REQUEST_SECRET 则填随机值），与发起端
+  // app/utils/internal-request.ts 读同一份、同进程，天然一致。
+  // 取不到密钥时不放行，退回常规 referer 校验——不回落到源码里的公开常量（那等于没有门禁）。
   const ssrInternalRequest = event.node.req.headers["x-ssr-internal-request"];
-  const ssrInternalRequestSecret = process.env.SSR_INTERNAL_REQUEST_SECRET || "imqi1-cms-ssr-internal-request";
+  const ssrInternalRequestSecret = process.env.SSR_INTERNAL_REQUEST_SECRET;
   const isSsrInternalRequest = !!ssrInternalRequestSecret && ssrInternalRequest === ssrInternalRequestSecret;
 
   if (isSsrInternalRequest) {

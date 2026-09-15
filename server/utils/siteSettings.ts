@@ -10,7 +10,7 @@ const defaults: SiteSettings = {
   siteDesc: siteConfig.seo.description,
   siteIcp: "",
   homeCustomText: siteConfig.pages.homeCustomText,
-  photoCategorySlug: "shot",
+  photoCategorySlug: "",
   commentEnabled: true,
   commentAvatarService: "gravatar",
   commentPageSize: 10,
@@ -21,7 +21,7 @@ const defaults: SiteSettings = {
   contentPageSize: 12,
   feedCacheInterval: 8,
   linkAutoApprove: false,
-  musicPlaylistId: "9255074836 || netease",
+  musicPlaylistId: "",
 };
 
 function sanitizePublicSettings(settings: MutableSettings): SiteSettings {

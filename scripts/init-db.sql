@@ -249,7 +249,6 @@ INSERT INTO "informations" ("key", "value") VALUES
   ('feedCacheInterval', '8'),
   ('musicPlaylistId', ''),
   ('moderationApiType', '1'),
-  ('baiduAppId', ''),
   ('baiduApiKey', ''),
   ('baiduSecretKey', ''),
   ('baiduCheckAdmin', 'false'),

@@ -48,22 +48,6 @@ export function getDelegate(model: string, client: object = prisma): PrismaModel
 }
 
 /**
- * informations 表中按 key 存储的敏感配置项（SMTP 密钥/COS 密钥/百度审核密钥等）。
- * 导出备份时必须掩码或剔除，与 settings.get 的 SENSITIVE_KEYS 一致——
- * 否则下载的备份文件会明文携带真实密钥（约定5 敏感配置运行时化）。
- * 恢复后这些值需在后台重新填写。
- */
-export const SENSITIVE_INFORMATIONS_KEYS = new Set([
-	"smtpUser",
-	"smtpPassword",
-	"cosSecretId",
-	"cosSecretKey",
-	"baiduApiKey",
-	"baiduSecretKey",
-]);
-export const SENSITIVE_MASK = "********";
-
-/**
  * 将导入行中的日期字段由 ISO 字符串还原为 Date，其余字段原样保留。
  * 非法日期直接剔除该字段，交由数据库默认值处理。
  */

@@ -225,9 +225,6 @@ export function validateSettingsData(data: Record<string, string | null | undefi
   }
 
   // 百度审核设置
-  if (data.baiduAppId) {
-    validateMaxLength(data.baiduAppId, 191, "百度应用ID");
-  }
   if (data.baiduApiKey) {
     validateMaxLength(data.baiduApiKey, 191, "百度API Key");
   }

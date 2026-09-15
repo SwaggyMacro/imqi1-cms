@@ -13,7 +13,7 @@ const defaults: Record<string, string | number | boolean> = {
   siteDesc: siteConfig.seo.description,
   siteIcp: "",
   homeCustomText: siteConfig.pages.homeCustomText,
-  photoCategorySlug: "shot",
+  photoCategorySlug: "",
   commentEnabled: true,
   commentAvatarService: "gravatar",
   commentPageSize: 10,

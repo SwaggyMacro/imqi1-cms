@@ -25,10 +25,9 @@ const settings = ref<AdminSettings>({
   contentPageSize: 12,
   feedCacheInterval: 8,
   homeCustomText: "",
-  musicPlaylistId: "9255074836 || netease",
-  photoCategorySlug: "shot",
+  musicPlaylistId: "",
+  photoCategorySlug: "",
   moderationApiType: "1",
-  baiduAppId: "",
   baiduApiKey: "",
   baiduSecretKey: "",
   baiduCheckAdmin: false,
@@ -50,7 +49,7 @@ const settings = ref<AdminSettings>({
   cosRegion: "",
   cosSourceDomain: "",
   cosCdnDomain: "",
-  cosImageSuffix: "webp",
+  cosImageSuffix: "",
   sessionStoreType: "memory",
   messageContentId: "",
   linkAutoApprove: false,
@@ -237,10 +236,9 @@ const defaultSettings: AdminSettings = {
   contentPageSize: 12,
   feedCacheInterval: 8,
   homeCustomText: "",
-  musicPlaylistId: "9255074836 || netease",
-  photoCategorySlug: "shot",
+  musicPlaylistId: "",
+  photoCategorySlug: "",
   moderationApiType: "1",
-  baiduAppId: "",
   baiduApiKey: "",
   baiduSecretKey: "",
   baiduCheckAdmin: false,
@@ -262,7 +260,7 @@ const defaultSettings: AdminSettings = {
   cosRegion: "",
   cosSourceDomain: "",
   cosCdnDomain: "",
-  cosImageSuffix: "webp",
+  cosImageSuffix: "",
   sessionStoreType: "memory",
   messageContentId: "",
   linkAutoApprove: false,
@@ -596,19 +594,21 @@ onMounted(() => {
               <!-- 基础设置 -->
               <div class="space-y-4">
                 <h4 class="text-sm font-medium">基础设置</h4>
-                <div class="flex items-center justify-between">
-                  <div class="space-y-0.5">
-                    <Label for="commentEnabled">开启评论</Label>
-                    <p class="text-sm text-muted-foreground">是否允许用户发表评论</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                  <div class="flex items-center justify-between gap-4">
+                    <div class="space-y-0.5">
+                      <Label for="commentEnabled">开启评论</Label>
+                      <p class="text-sm text-muted-foreground">是否允许用户发表评论</p>
+                    </div>
+                    <Switch id="commentEnabled" v-model="settings.commentEnabled" />
                   </div>
-                  <Switch id="commentEnabled" v-model="settings.commentEnabled" />
-                </div>
-                <div class="flex items-center justify-between">
-                  <div class="space-y-0.5">
-                    <Label for="commentModeration">评论审核</Label>
-                    <p class="text-sm text-muted-foreground">新评论需要审核后才能显示</p>
+                  <div class="flex items-center justify-between gap-4">
+                    <div class="space-y-0.5">
+                      <Label for="commentModeration">评论审核</Label>
+                      <p class="text-sm text-muted-foreground">新评论需要审核后才能显示</p>
+                    </div>
+                    <Switch id="commentModeration" v-model="settings.commentModeration" />
                   </div>
-                  <Switch id="commentModeration" v-model="settings.commentModeration" />
                 </div>
               </div>
 
@@ -617,22 +617,24 @@ onMounted(() => {
               <!-- 头像和显示设置 -->
               <div class="space-y-4">
                 <h4 class="text-sm font-medium">头像和显示</h4>
-                <div class="space-y-2">
-                  <Label for="commentAvatarService">头像服务</Label>
-                  <Select v-model="settings.commentAvatarService">
-                    <SelectTrigger id="commentAvatarService">
-                      <SelectValue placeholder="选择头像服务" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem v-for="service in avatarServices" :key="service.value" :value="service.value">
-                        {{ service.label }}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div class="space-y-2">
-                  <Label for="commentPageSize">每页显示评论数</Label>
-                  <Input id="commentPageSize" v-model.number="settings.commentPageSize" type="number" min="1" max="100" />
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <Label for="commentAvatarService">头像服务</Label>
+                    <Select v-model="settings.commentAvatarService">
+                      <SelectTrigger id="commentAvatarService">
+                        <SelectValue placeholder="选择头像服务" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem v-for="service in avatarServices" :key="service.value" :value="service.value">
+                          {{ service.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="commentPageSize">每页显示评论数</Label>
+                    <Input id="commentPageSize" v-model.number="settings.commentPageSize" type="number" min="1" max="100" />
+                  </div>
                 </div>
               </div>
 
@@ -641,15 +643,17 @@ onMounted(() => {
               <!-- 回复和限制设置 -->
               <div class="space-y-4">
                 <h4 class="text-sm font-medium">回复和限制</h4>
-                <div class="space-y-2">
-                  <Label for="commentMaxLevel">最大回复层级</Label>
-                  <Input id="commentMaxLevel" v-model.number="settings.commentMaxLevel" type="number" min="0" max="10" />
-                  <p class="text-xs text-muted-foreground">设置为 0 时不允许回复评论，默认为 4 层</p>
-                </div>
-                <div class="space-y-2">
-                  <Label for="commentInterval">发布间隔（秒）</Label>
-                  <Input id="commentInterval" v-model.number="settings.commentInterval" type="number" min="0" max="3600" />
-                  <p class="text-xs text-muted-foreground">同一 IP 发布评论的最小间隔时间，默认为 60 秒</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <Label for="commentMaxLevel">最大回复层级</Label>
+                    <Input id="commentMaxLevel" v-model.number="settings.commentMaxLevel" type="number" min="0" max="10" />
+                    <p class="text-xs text-muted-foreground">设置为 0 时不允许回复评论，默认为 4 层</p>
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="commentInterval">发布间隔（秒）</Label>
+                    <Input id="commentInterval" v-model.number="settings.commentInterval" type="number" min="0" max="3600" />
+                    <p class="text-xs text-muted-foreground">同一 IP 发布评论的最小间隔时间，默认为 60 秒</p>
+                  </div>
                 </div>
               </div>
 
@@ -658,19 +662,21 @@ onMounted(() => {
               <!-- 必填设置 -->
               <div class="space-y-4">
                 <h4 class="text-sm font-medium">必填项</h4>
-                <div class="flex items-center justify-between">
-                  <div class="space-y-0.5">
-                    <Label for="commentRequireMail">必填邮箱</Label>
-                    <p class="text-sm text-muted-foreground">发表评论时必须填写邮箱</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                  <div class="flex items-center justify-between gap-4">
+                    <div class="space-y-0.5">
+                      <Label for="commentRequireMail">必填邮箱</Label>
+                      <p class="text-sm text-muted-foreground">发表评论时必须填写邮箱</p>
+                    </div>
+                    <Switch id="commentRequireMail" v-model="settings.commentRequireMail" />
                   </div>
-                  <Switch id="commentRequireMail" v-model="settings.commentRequireMail" />
-                </div>
-                <div class="flex items-center justify-between">
-                  <div class="space-y-0.5">
-                    <Label for="commentRequireLink">必填链接</Label>
-                    <p class="text-sm text-muted-foreground">发表评论时必须填写个人链接</p>
+                  <div class="flex items-center justify-between gap-4">
+                    <div class="space-y-0.5">
+                      <Label for="commentRequireLink">必填链接</Label>
+                      <p class="text-sm text-muted-foreground">发表评论时必须填写个人链接</p>
+                    </div>
+                    <Switch id="commentRequireLink" v-model="settings.commentRequireLink" />
                   </div>
-                  <Switch id="commentRequireLink" v-model="settings.commentRequireLink" />
                 </div>
               </div>
 
@@ -700,18 +706,14 @@ onMounted(() => {
                     <Icon name="lucide:shield" class="size-4 text-primary" />
                     <span class="text-sm font-medium">百度内容审核平台配置</span>
                   </div>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="space-y-2">
-                      <Label for="baiduAppId">AppID</Label>
-                      <Input id="baiduAppId" v-model="settings.baiduAppId" placeholder="请填写百度智能云控制台获取的 AppID" />
-                    </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
                       <Label for="baiduApiKey">API Key</Label>
                       <Input id="baiduApiKey" v-model="settings.baiduApiKey" placeholder="请填写百度智能云控制台获取的 API Key" />
                     </div>
                     <div class="space-y-2">
                       <Label for="baiduSecretKey">Secret Key</Label>
-                      <Input id="baiduSecretKey" v-model="settings.baiduSecretKey" type="password" placeholder="请填写百度智能云控制台获取的 Secret Key" />
+                      <Input id="baiduSecretKey" v-model="settings.baiduSecretKey" placeholder="请填写百度智能云控制台获取的 Secret Key" />
                     </div>
                   </div>
                   <div class="flex items-center justify-between pt-2">
@@ -761,7 +763,7 @@ onMounted(() => {
                 <h4 class="text-sm font-medium">音乐设置</h4>
                 <div class="space-y-2">
                   <Label for="musicPlaylistId">音乐列表 ID</Label>
-                  <Input id="musicPlaylistId" v-model="settings.musicPlaylistId" placeholder="格式：歌单ID || 来源（netease/qq/tencent/kugou），如 9255074836 || netease" />
+                  <Input id="musicPlaylistId" v-model="settings.musicPlaylistId" placeholder="格式：歌单ID || 来源（netease/tencent/kugou），如 9255074836 || netease" />
                   <p class="text-xs text-muted-foreground">网易云音乐歌单 ID，格式：歌单ID || 来源（支持 netease、qq 等）</p>
                 </div>
               </div>
@@ -820,7 +822,7 @@ onMounted(() => {
                     </div>
                     <div class="space-y-2">
                       <Label for="cosSecretKey">SecretKey</Label>
-                      <Input id="cosSecretKey" v-model="settings.cosSecretKey" type="password" placeholder="请填写腾讯云访问管理 API 密钥 SecretKey" />
+                      <Input id="cosSecretKey" v-model="settings.cosSecretKey" placeholder="请填写腾讯云访问管理 API 密钥 SecretKey" />
                     </div>
                     <div class="space-y-2">
                       <Label for="cosBucket">存储桶名称</Label>
@@ -846,7 +848,7 @@ onMounted(() => {
                   <div class="space-y-2">
                     <Label for="cosImageSuffix">上传后的图片后缀（可选）</Label>
                     <Input id="cosImageSuffix" v-model="settings.cosImageSuffix" placeholder="请填写目标图片后缀，如 webp、avif、jpg，留空保持原格式" />
-                    <p class="text-xs text-muted-foreground">用于云存储自动处理图片格式。将所有上传的图片转换为该后缀，不影响视频。留空则保持原格式。默认值: webp</p>
+                    <p class="text-xs text-muted-foreground">用于云存储自动处理图片格式。将所有上传的图片转换为该后缀，不影响视频。留空则保持原格式。</p>
                   </div>
                 </div>
 
@@ -862,7 +864,6 @@ onMounted(() => {
                         <li>在腾讯云控制台的 <strong>访问管理 - API密钥管理</strong> 中获取 SecretId 和 SecretKey</li>
                         <li>存储桶格式：<code>bucket-name-appid</code>，可在存储桶列表中查看</li>
                         <li>地域代码：ap-guangzhou（广州）、ap-beijing（北京）、ap-shanghai（上海）等</li>
-                        <li>确保存储桶权限设置为 <strong>公共读</strong>，否则上传的文件无法访问</li>
                       </ul>
                     </div>
                   </div>
@@ -939,7 +940,7 @@ onMounted(() => {
                 <div class="flex items-center justify-between">
                   <div class="space-y-0.5">
                     <Label for="emailLogEnabled">记录邮件日志</Label>
-                    <p class="text-sm text-muted-foreground">是否记录邮件发送日志到数据库</p>
+                    <p class="text-sm text-muted-foreground">是否记录邮件发送日志到文件</p>
                   </div>
                   <Switch id="emailLogEnabled" v-model="settings.emailLogEnabled" />
                 </div>
@@ -986,7 +987,7 @@ onMounted(() => {
                   </div>
                   <div class="space-y-2">
                     <Label for="smtpPassword">SMTP 登录密码</Label>
-                    <Input id="smtpPassword" v-model="settings.smtpPassword" type="password" placeholder="请填写邮箱登录密码或 SMTP 授权码" />
+                    <Input id="smtpPassword" v-model="settings.smtpPassword" placeholder="请填写邮箱登录密码或 SMTP 授权码" />
                   </div>
                 </div>
 

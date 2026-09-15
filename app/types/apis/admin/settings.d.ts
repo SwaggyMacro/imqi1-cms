@@ -23,7 +23,6 @@ export interface AdminSettings {
 	musicPlaylistId: string;
 	photoCategorySlug: string;
 	moderationApiType: string;
-	baiduAppId: string;
 	baiduApiKey: string;
 	baiduSecretKey: string;
 	baiduCheckAdmin: boolean;

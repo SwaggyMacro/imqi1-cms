@@ -7,9 +7,7 @@
 | **带 Redis** | `docker-compose.yml` + `Dockerfile` | 应用 + PostgreSQL 16 + Redis 7 | 构建期烘焙 `redis:6379`（compose 服务名）并启动 redis 容器，ISR 增量缓存与搜索缓存共用；redis 数据存于 `redis-data` 卷 |
 | **不带 Redis** | `docker-compose.noredis.yml` + `Dockerfile.noredis` | 应用 + PostgreSQL 16 | 构建期显式关闭 Redis：ISR 走文件系统缓存、搜索缓存关闭，无 redis 容器/卷 |
 
-> 注意：**是否启用 Redis 只由「选哪套 compose 文件」决定**。两套 Dockerfile 里各自烘焙了开关（带 Redis 的 `REDIS_ENABLED=true` / `REDIS_HOST=redis`，不带 Redis 的 `REDIS_ENABLED=false`），compose 的 `build.args` 写的是**固定字面量**，不读环境变量 —— 所以 `.env` 里不需要也**不应该**再写任何 `REDIS_*` 变量（写了也不会生效，见下文「运行时覆盖」唯一例外）。也**不需要任何 `COMPOSE_PROFILES`**。
-
-> **`site.config.ts` 的 `build.redis` 在 Docker 部署下同样不生效**，它只对**裸机部署**负责。两个 Dockerfile 总会把 `REDIS_ENABLED` / `REDIS_HOST` 等设进构建环境，而 [shared/redis-config.ts](../shared/redis-config.ts) 的取值是 `环境变量 ?? site.config`——环境变量一旦有值，`site.config` 就永远不被查。所以把 `build.redis.enabled` 改成 `false` 并不能关掉 Docker 里的 Redis；Docker 这边唯一的开关就是选哪套 compose。
+> **`site.config.ts` 的 `build.redis` 在 Docker 部署下不生效**，它只对**裸机部署**负责。两个 Dockerfile 总会把 `REDIS_ENABLED` / `REDIS_HOST` 等设进构建环境，而 [shared/redis-config.ts](../shared/redis-config.ts) 的取值是 `环境变量 ?? site.config`——环境变量一旦有值，`site.config` 就永远不被查。所以把 `build.redis.enabled` 改成 `false` 并不能关掉 Docker 里的 Redis；Docker 这边唯一的开关就是选哪套 compose。
 
 ## 指定 Redis 参数（可选）
 
@@ -17,8 +15,7 @@
 
 ```bash
 # 连外部 Redis
-docker compose --env-file .env -f docker/docker-compose.yml build \
-  --build-arg REDIS_HOST=10.0.0.5 --build-arg REDIS_PORT=6379 --build-arg REDIS_DB=1
+docker compose --env-file .env -f docker/docker-compose.yml build --build-arg REDIS_HOST=10.0.0.5 --build-arg REDIS_PORT=6379 --build-arg REDIS_DB=1
 ```
 
 可用变量：`REDIS_ENABLED` / `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB`（不含密码，见下）。`--build-arg` 优先级高于 compose 里的字面量。改完**必须重新 build** 才生效（值在打包时烘焙进产物）。

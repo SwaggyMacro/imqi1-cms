@@ -88,7 +88,6 @@ export default defineEventHandler(async event => {
       { key: "musicPlaylistId", value: settingsData.musicPlaylistId ?? "9255074836 || netease" },
       { key: "photoCategorySlug", value: settingsData.photoCategorySlug ?? "shot" },
       { key: "moderationApiType", value: String(settingsData.moderationApiType ?? "1") },
-      ...(settingsData.baiduAppId !== undefined ? [{ key: "baiduAppId", value: settingsData.baiduAppId ?? "" }] : []),
       ...(settingsData.baiduApiKey !== undefined ? [{ key: "baiduApiKey", value: settingsData.baiduApiKey ?? "" }] : []),
       ...(settingsData.baiduSecretKey !== undefined ? [{ key: "baiduSecretKey", value: settingsData.baiduSecretKey ?? "" }] : []),
       { key: "baiduCheckAdmin", value: String(settingsData.baiduCheckAdmin ?? false) },

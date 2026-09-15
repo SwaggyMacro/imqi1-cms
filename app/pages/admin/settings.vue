@@ -28,7 +28,6 @@ const settings = ref<AdminSettings>({
   musicPlaylistId: "9255074836 || netease",
   photoCategorySlug: "shot",
   moderationApiType: "1",
-  baiduAppId: "",
   baiduApiKey: "",
   baiduSecretKey: "",
   baiduCheckAdmin: false,
@@ -240,7 +239,6 @@ const defaultSettings: AdminSettings = {
   musicPlaylistId: "9255074836 || netease",
   photoCategorySlug: "shot",
   moderationApiType: "1",
-  baiduAppId: "",
   baiduApiKey: "",
   baiduSecretKey: "",
   baiduCheckAdmin: false,
@@ -700,11 +698,7 @@ onMounted(() => {
                     <Icon name="lucide:shield" class="size-4 text-primary" />
                     <span class="text-sm font-medium">百度内容审核平台配置</span>
                   </div>
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="space-y-2">
-                      <Label for="baiduAppId">AppID</Label>
-                      <Input id="baiduAppId" v-model="settings.baiduAppId" placeholder="请填写百度智能云控制台获取的 AppID" />
-                    </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="space-y-2">
                       <Label for="baiduApiKey">API Key</Label>
                       <Input id="baiduApiKey" v-model="settings.baiduApiKey" placeholder="请填写百度智能云控制台获取的 API Key" />

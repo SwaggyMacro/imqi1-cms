@@ -47,7 +47,6 @@ export default defineEventHandler(async event => {
       musicPlaylistId: "9255074836 || netease",
       photoCategorySlug: "shot",
       moderationApiType: "1",
-      baiduAppId: "",
       baiduApiKey: "",
       baiduSecretKey: "",
       baiduCheckAdmin: false,

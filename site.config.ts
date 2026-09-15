@@ -218,7 +218,6 @@ export const siteConfig = defineSiteConfig({
   // ==================== 功能 ====================
   features: {
     miniApi: true,
-    miniComment: true,
     mobileQr: true,
     miniQr: true,
     amap: {

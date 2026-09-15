@@ -30,7 +30,7 @@ export function setCsrfToken(event: H3Event): string {
 
   setCookie(event, "csrf_token", token, {
     httpOnly: false, // 需要前端读取
-    secure: import.meta.env.PROD, // 生产环境使用 HTTPS
+    secure: process.env.NODE_ENV === "production", // 生产环境使用 HTTPS
     sameSite: "strict",
     maxAge: 60 * 60, // 1 小时
     path: "/",

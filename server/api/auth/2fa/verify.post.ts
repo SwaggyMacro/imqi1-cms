@@ -83,8 +83,8 @@ export default defineEventHandler(async event => {
     });
     setCookie(event, TRUSTED_DEVICE_COOKIE, deviceId, {
       httpOnly: true,
-      secure: import.meta.env.PROD,
-      sameSite: import.meta.env.PROD ? "strict" : "lax",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       maxAge: 30 * 24 * 3600,
       path: "/",
     });

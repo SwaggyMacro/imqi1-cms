@@ -252,7 +252,7 @@ export async function issueCaptcha(event: H3Event): Promise<Buffer> {
 
   setCookie(event, CAPTCHA_COOKIE, token, {
     httpOnly: true,
-    secure: import.meta.env.PROD,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: 60 * 5,
     path: "/",

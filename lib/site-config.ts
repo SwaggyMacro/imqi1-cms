@@ -83,9 +83,10 @@ export interface SiteSecurityConfig {
   /** 允许访问 API 的 Referer 根域名列表 */
   allowedRefererDomains: string[];
   /**
-   * 是否启用 CSP（内容安全策略）。仅生产构建（含 nuxi preview）生效：每请求生成 nonce，
-   * 通过 HTTP 响应头投递 `Content-Security-Policy`（script-src 走 nonce + strict-dynamic），
-   * 并给所有 <script> 注入 nonce。详见 server/utils/csp.ts 与 server/plugins/csp.ts。
+   * 是否启用 CSP（内容安全策略）。仅生产构建（含 nuxi preview）生效：以 HTTP 响应头投递
+   * `Content-Security-Policy`。**不用 nonce**（script-src 为 `'unsafe-inline' 'unsafe-eval' 'self' https:`）：
+   * 高德运行时 SDK 内部走 javascript: URL，只能靠 'unsafe-inline' 放行，而 CSP3 下 nonce 在场会让
+   * 'unsafe-inline' 整体失效。原因与取舍详见 server/utils/csp.ts，投递见 server/plugins/csp.ts。
    * 本地用 `nuxi preview` 验证打包产物时可临时关闭：CSP 会拦截音乐直链、地图第三方等，
    * 干扰功能验证；正式部署应保持开启。
    */

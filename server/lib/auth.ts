@@ -53,10 +53,13 @@ export async function setSession(event: H3Event, user: Omit<SessionUser, "authCo
   // （旧会话在 getUser() 时因 authCode 不匹配被删除），过期的孤儿会话由 store.cleanup()
   // 周期清理，无需在此逐个清点。
 
+  // 勿用 import.meta.env.PROD：Nitro 不替换该键，服务端产物里会求值成 process.env.PROD（恒 undefined）
+  const isProduction = process.env.NODE_ENV === "production";
+
   setCookie(event, SESSION_COOKIE_NAME, sessionId, {
-    secure: import.meta.env.PROD, // 生产环境使用 HTTPS 传输
+    secure: isProduction, // 生产环境使用 HTTPS 传输
     httpOnly: true, // 防止 JavaScript 访问，防止 XSS 窃取
-    sameSite: import.meta.env.PROD ? "strict" : "lax", // 开发环境使用 lax 以支持重定向，生产环境使用 strict
+    sameSite: isProduction ? "strict" : "lax", // 开发环境使用 lax 以支持重定向，生产环境使用 strict
     maxAge: SESSION_MAX_AGE,
     path: "/",
     // 开发环境额外添加 domain 属性（如果需要）

@@ -3,7 +3,9 @@ import { siteConfig } from "~~/site.config";
 
 // 仅生产构建（含 nuxi preview）且站点配置开启 CSP 时启用。
 // dev 不注入：CSP 会拦截音乐直链、地图第三方等，干扰本地开发。
-const CSP_ENABLED = import.meta.env.PROD && siteConfig.security.enableCsp;
+// 勿用 import.meta.env.PROD：Nitro 不替换该键，服务端产物里会求值成 process.env.PROD（恒 undefined）。
+// NODE_ENV 在构建期被替换为字面量，与上方「仅生产构建」的语义一致。
+const CSP_ENABLED = process.env.NODE_ENV === "production" && siteConfig.security.enableCsp;
 
 /**
  * 以 HTTP 响应头（非 <meta>）投递 CSP。

@@ -1,7 +1,7 @@
 import { prisma } from "#server/utils/prisma";
 import { getUser } from "#server/lib/auth";
 import { validateCsrfToken } from "#server/utils/csrf";
-import { validateChangelogData } from "#server/utils/validation";
+import { validateChangelogData, setLengthWarnings } from "#server/utils/validation";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 import { normalizeChangelogEntries, stringifyChangelogContent } from "#server/utils/changelog";
 import type { ChangelogInputJson, ChangelogInputRecord, ParsedRecord } from "#server/types/apis/changelog-import";
@@ -110,7 +110,7 @@ export default defineEventHandler(async event => {
     const out = [];
     for (const rec of records) {
       const entries = normalizeChangelogEntries(rec.entries);
-      validateChangelogData(entries);
+      setLengthWarnings(event, validateChangelogData(entries));
 
       // 序列化后的 content 在 PG 为 TEXT（无 65535 上限），仍保留保守护栏防单条超大内容；单条超限提前拦成 400，避免过了校验却 DB 报错
       const serialized = stringifyChangelogContent(entries);

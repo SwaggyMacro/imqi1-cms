@@ -10,7 +10,7 @@ import { uploadToCOS } from "#server/utils/cos";
 import { validateCsrfToken } from "#server/utils/csrf";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 import prisma from "#server/utils/prisma";
-import { validateAttachmentData } from "#server/utils/validation";
+import { validateAttachmentData, setLengthWarnings } from "#server/utils/validation";
 
 // 允许的文件类型
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
@@ -234,12 +234,11 @@ export default defineEventHandler(async event => {
       format: getFormatFromUrl(fileUrl) ?? rawMetadata.format,
     };
 
-    // 验证字段长度
-    validateAttachmentData({
+    setLengthWarnings(event, validateAttachmentData({
       title: file.name,
       type: category,
       url: fileUrl,
-    });
+    }));
 
     // 保存到数据库
     const attachment = await prisma.$transaction(async tx => {

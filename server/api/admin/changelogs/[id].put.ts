@@ -1,7 +1,7 @@
 import { prisma } from "#server/utils/prisma";
 import { getUser } from "#server/lib/auth";
 import { validateCsrfToken } from "#server/utils/csrf";
-import { validateChangelogData } from "#server/utils/validation";
+import { validateChangelogData, setLengthWarnings } from "#server/utils/validation";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 import {
   normalizeChangelogEntries,
@@ -35,7 +35,7 @@ export default defineEventHandler(async event => {
   }
   // 前端发来 { content: [{ type, value }, ...] }，规整后校验
   const entries = normalizeChangelogEntries(body?.content);
-  validateChangelogData(entries);
+  setLengthWarnings(event, validateChangelogData(entries));
 
   try {
     // 检查日志是否存在

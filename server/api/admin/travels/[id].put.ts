@@ -1,7 +1,7 @@
 import { prisma } from "#server/utils/prisma";
 import { getUser } from "#server/lib/auth";
 import { validateCsrfToken } from "#server/utils/csrf";
-import { validateTravelData } from "#server/utils/validation";
+import { validateTravelData, setLengthWarnings } from "#server/utils/validation";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 
 export default defineEventHandler(async event => {
@@ -73,8 +73,7 @@ export default defineEventHandler(async event => {
     });
   }
 
-  // 验证字段长度
-  validateTravelData({ name, desc, cover });
+  setLengthWarnings(event, validateTravelData({ name, desc, cover }));
 
   // 检查地点是否存在（pre-check 与 update 之间有并发删除窗口，update 会抛 P2025 → 500）
   try {

@@ -1,7 +1,7 @@
 import { prisma } from "#server/utils/prisma";
 import { getUser } from "#server/lib/auth";
 import { validateCsrfToken } from "#server/utils/csrf";
-import { validateMetaData } from "#server/utils/validation";
+import { validateMetaData, setLengthWarnings } from "#server/utils/validation";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 
 export default defineEventHandler(async event => {
@@ -55,8 +55,7 @@ export default defineEventHandler(async event => {
     });
   }
 
-  // 验证字段长度
-  validateMetaData({ name, slug, desc });
+  setLengthWarnings(event, validateMetaData({ name, slug, desc }));
 
   try {
 

@@ -1,6 +1,6 @@
 import {prisma} from "#server/utils/prisma";
 import {getUser} from "#server/lib/auth";
-import {validateLinkData} from "#server/utils/validation";
+import { validateLinkData, setLengthWarnings } from "#server/utils/validation";
 import {validateCsrfToken} from "#server/utils/csrf";
 import {ensureUrlProtocol} from "#server/utils/urlGuard";
 import {invalidateContentCaches} from "#server/utils/content-cache";
@@ -67,13 +67,12 @@ export default defineEventHandler(async event => {
   }
 
   try {
-    // 验证字段长度
-    validateLinkData({
+    setLengthWarnings(event, validateLinkData({
       name: body.name,
       link,
       desc: body.desc,
       avatar: body.avatar,
-    });
+    }));
 
     // 检查链接是否存在
     const existing = await prisma.links.findUnique({

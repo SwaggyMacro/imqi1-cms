@@ -1,7 +1,7 @@
 import { getUser } from "#server/lib/auth";
 import { validateCsrfToken } from "#server/utils/csrf";
 import { prisma } from "#server/utils/prisma";
-import { validateSettingsData } from "#server/utils/validation";
+import { validateSettingsData, setLengthWarnings } from "#server/utils/validation";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 import { siteConfig } from "~~/site.config";
 
@@ -65,8 +65,7 @@ export default defineEventHandler(async event => {
   }
   const settingsData = filteredBody;
 
-  // 验证字段长度
-  validateSettingsData(settingsData);
+  setLengthWarnings(event, validateSettingsData(settingsData));
 
   try {
     const updates = [

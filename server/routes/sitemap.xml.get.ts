@@ -1,15 +1,15 @@
 import { prisma } from "#server/utils/prisma";
+import { getSiteSettings } from "#server/utils/siteSettings";
 import { escapeXml } from "#server/utils/xml";
-import { siteConfig } from "~~/site.config";
-
-// 站点根 URL 一律取自配置的 siteUrl（绝不取客户端 Host 头，防 host 投毒）。
-const baseUrl = siteConfig.site.url.replace(/\/$/, "");
 
 export default defineEventHandler(async event => {
   try {
-    // 文章/页面/分类/标签四个查询互不依赖，并行取回避免串行叠加延迟。
+    // 站点根 URL 跟随后台设置（为空时 getSiteSettings 内部已回落 site.config.ts）。
+    // 绝不取客户端 Host 头，防 host 投毒；与 canonical / og:url 必须同源，否则爬虫会看到两套域名。
+    // 站点设置与文章/页面/分类/标签四个查询互不依赖，并行取回避免串行叠加延迟。
     // 文章 contentrelations 需 type:"category" 过滤 + orderBy，否则 contentrelations[0] 可能取到标签而非分类。
-    const [contents, pages, categories, tags] = await Promise.all([
+    const [settings, contents, pages, categories, tags] = await Promise.all([
+      getSiteSettings(),
       // 所有已发布的文章
       prisma.contents.findMany({
         where: {
@@ -63,6 +63,8 @@ export default defineEventHandler(async event => {
         },
       }),
     ]);
+
+    const baseUrl = settings.siteUrl.replace(/\/+$/, "");
 
     // 构建 URL 列表
     const urls: string[] = [];

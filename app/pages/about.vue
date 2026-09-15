@@ -553,14 +553,20 @@ import type { ProfileTag, SkillGroup } from "~/types/pages/about";
 import { siteConfig } from "~~/site.config";
 
 // 使用全局站点设置
-const { siteSettings, buildHash } = useSiteSettings();
+const { siteSettings, buildHash, siteUrl } = useSiteSettings();
 const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 
 // 十年之约入口链接（取自 site.config.ts 的 blogOrganizations，避免硬编码）
 const tenYearPledgeUrl = computed(() => siteConfig.pages.links.blogOrganizations.find(o => o.name === "十年之约")?.url || "https://www.foreverblog.cn/");
 
-// 装饰性品牌文字（站点域名大写形式）
-const brandDomain = new URL(siteConfig.site.url).host.toUpperCase();
+// 装饰性品牌文字（站点域名大写形式），跟随后台设置的站点地址，未配置时回落 site.config.ts
+const brandDomain = computed(() => {
+  try {
+    return new URL(siteUrl.value).host.toUpperCase();
+  } catch {
+    return siteConfig.site.rootDomain.toUpperCase();
+  }
+});
 
 // 注入页面加载状态
 const pageLoading = inject<Ref<boolean>>("pageLoading", ref(false));

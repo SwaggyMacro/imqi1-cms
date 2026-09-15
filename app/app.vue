@@ -3,7 +3,7 @@ import { printWelcomeBanner } from "#shared/welcome-banner";
 import { siteConfig } from "~~/site.config";
 
 const route = useRoute();
-const { buildHash } = useSiteSettings();
+const { buildHash, siteUrl } = useSiteSettings();
 
 // 构建哈希：走 /api/site 下发（非 public，不进 __NUXT__ 的 runtimeConfig），SSR 插件预取，供 meta 展示。
 useHead({ meta: [{ name: "build-hash", content: computed(() => buildHash.value ?? "") }] });
@@ -160,19 +160,17 @@ nuxtApp.hook("page:finish", () => {
 provide("pageLoading", readonly(showPageLoading));
 
 // 全局 SEO 元信息（仅动态内容）
-const siteUrl = siteConfig.site.url;
-
 useHead({
   link: [
     {
       rel: "canonical",
-      href: computed(() => siteUrl + route.path),
+      href: computed(() => siteUrl.value + route.path),
     },
   ],
   meta: [
     {
       property: "og:url",
-      content: computed(() => siteUrl + route.path),
+      content: computed(() => siteUrl.value + route.path),
     },
   ],
   // 首屏遮罩兜底脚本：在 Vue 挂载之前就以原生 <script> 执行，独立于水合。

@@ -11,7 +11,9 @@ export default defineNuxtPlugin(() => {
     return;
   }
 
-  // 直接读 siteConfig.site.rootDomain（不再经 runtimeConfig.public.rootDomain）
+  // 跳转目标固定取构建期配置，不跟随后台设置：这里是唯一会主动跳转的地方，
+  // 一旦后台把站点地址填错，跟着走就是全站访客被弹去错误域名；留在构建期常量上，
+  // 填错最坏只是 canonical 等标签指错域名，站点本身仍可访问。
   const rootDomain = siteConfig.site.rootDomain;
 
   // 如果未配置 rootDomain，则不启用防护

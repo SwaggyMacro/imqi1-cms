@@ -170,7 +170,7 @@ const findMarkdownImageDimensions = (url: string): MarkdownImageDimensions => {
 };
 
 // 使用全局站点设置
-const { siteSettings } = useSiteSettings();
+const { siteSettings, siteUrl } = useSiteSettings();
 const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
 const commentEnabled = computed(() => siteSettings.value?.commentEnabled ?? true);
 
@@ -353,7 +353,7 @@ const seoMeta = computed(() => {
   if (!content.value) return { title: pageTitle.value };
 
   // 统一用站点 URL + 路由路径：og:url / canonical 必须稳定，不应随客户端 query/hash 变化
-  const fullUrl = `${siteConfig.site.url}${route.path}`;
+  const fullUrl = `${siteUrl.value}${route.path}`;
 
   const keywords = tags.value.map(tag => tag.name).join(", ");
   const description = content.value.desc || "";
@@ -412,7 +412,7 @@ const seoMeta = computed(() => {
 useHead(() => seoMeta.value);
 
 // 文章手机端扫码查看：复用 /api/qr 通用接口，QR 内容为规范 URL
-const articleQr = computed(() => `/api/qr?text=${encodeURIComponent(`${siteConfig.site.url}${route.path}`)}`);
+const articleQr = computed(() => `/api/qr?text=${encodeURIComponent(`${siteUrl.value}${route.path}`)}`);
 
 // 小程序码（「文章小程序端看」）：懒加载，避免每篇都调微信 API；出错自动隐藏
 // 注意走公开 /api/qrcode（/api/mini/* 在会签 HMAC 鉴权，主站 <img> 无签名会 401）

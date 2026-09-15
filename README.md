@@ -47,7 +47,6 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
 - **Node.js** ≥ 22（推荐 LTS 版本）
 - **PostgreSQL** ≥ 14（推荐 16，与 docker 镜像版本一致；用于存储站点数据）
 - **Bun** ≥ 1.3（项目使用的包管理器与脚本运行器）
-- **Redis**（可选，用于 ISR 增量缓存与搜索缓存；未配置时 ISR 降级到文件系统、搜索缓存关闭）
 
 ### 安装项目
 
@@ -61,11 +60,7 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
 
 2. **安装 PostgreSQL**
 
-   安装数据库并创建一个供本项目使用的空数据库，例如 `imqi1`：
-
-   ```sql
-   CREATE DATABASE imqi1 ENCODING 'UTF8' LC_COLLATE 'C' LC_CTYPE 'C';
-   ```
+   安装并启动 PostgreSQL 即可，**无需手动建库**：第 8 步的 `bun run db:init` 会在库不存在时自动创建 `DB_NAME` 指定的数据库（UTF8 编码 + C 排序规则、属主为 `DB_USER`）并建表。该脚本以 `DB_USER` 身份连库，所以这个账号要能建库、并能创建 `pg_trgm` 扩展（通常需要超级用户）；权限不足时，改用超级用户单独执行 `scripts/init-db.sql` 末尾的扩展与索引段。
 
    > PG 默认超级用户是 `postgres`，生产建议新建应用账号单独管理（见 `.env.example` 的 `DB_USER` / `DB_PASSWORD`）。
 
@@ -108,7 +103,7 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
 
 6. **配置环境变量**
 
-   复制示例文件并按实际情况填写数据库连接、Redis、CDN 等配置：
+   复制示例文件并按实际情况填写数据库连接等配置：
 
    ```bash
    cp .env.example .env
@@ -130,7 +125,7 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
    bun run db:init
    ```
 
-   该命令会读取 `.env` 中的数据库配置并执行 `scripts/init-db.sql`，创建全部 16 张数据表、写入所有站点设置项的默认值，并插入一份示例数据（1 个管理员、1 个分类、1 篇文章、1 条评论）。脚本是幂等的，可安全重复执行，不会产生重复数据，也不会覆盖你已修改过的内容。
+   该命令会读取 `.env` 中的数据库配置，先自动创建 `DB_NAME` 指定的数据库（不存在时）并把该库的默认时区设为 UTC（归档分组与按时间排序依赖它，见 `scripts/init-db.ts` 注释），再执行 `scripts/init-db.sql`：创建全部 16 张数据表、写入所有站点设置项的默认值，并插入一份示例数据（1 个管理员、1 个分类、1 篇文章、1 条评论）。脚本是幂等的，可安全重复执行，不会产生重复数据，也不会覆盖你已修改过的内容。
 
    初始化后即可使用默认管理员账户登录后台：
 
@@ -142,7 +137,7 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
 
    > ⚠️ 出于安全考虑，登录后请立即在后台「账户设置」中修改密码。
    >
-   > 生产环境也可跳过此命令，直接在数据库管理工具（pgAdmin / DBeaver / psql 等）中导入 `scripts/init-db.sql` 执行，效果完全一致。
+   > 生产环境也可跳过此命令，直接在数据库管理工具（pgAdmin / DBeaver / psql 等）中导入 `scripts/init-db.sql`。但这样只执行 SQL 本身：**不会**自动建库、**不会**把库时区设为 UTC，两者需自行处理（时区非 UTC 会影响归档分组与按时间排序）。
 
 9. **启动开发服务器**
 
@@ -154,11 +149,19 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
 
 ### 开发
 
-本站采用 eslint 作为代码规范工具，使用 Nuxt 自动生成的类型和 TypeScript 做类型校验，覆盖绝大部分代码。
+代码规范与类型校验分三项，项目根没有封装 lint / type-check 脚本，直接在**项目根目录**用 `bunx`（CWD 别停在 `mini/`）：
+
+```bash
+bunx eslint .          # ESLint（flat config，error 驱动，刻意不降级为 warn）
+bunx nuxi typecheck    # Nuxt 类型检查（根 vue-tsc 不走 .nuxt/tsconfig 会漏报）
+bun run tailwindcss:lint
+```
+
+小程序端（`mini/`）改动用 `bun run mini:lint` / `bun run mini:type-check`。
 
 开发环境，运行 `bun run dev` 启动开发服务器，然后在浏览器访问 [http://localhost:3000](http://localhost:3000) 即可查看站点效果。
 
-为方便开发，本站提供了一个简易文件服务器。在根目录创建 .attachments 文件夹，它是文件服务器的根目录，并运行 `bun run serve` 启动。使用它可以在不污染 uploads 文件夹的情况下管理文件。注意这种方式没有对接 ImQi1 CMS 的文件上传功能，需要手动上传文件并拖拽到 .attachments 内，并且附件功能也未适配。
+为方便开发，本站提供了一个简易文件服务器（`scripts/file-server.ts`）：在根目录创建 `.attachments` 文件夹作为它的根目录，运行 `bun run serve` 启动，默认监听 `3030` 端口并绑定所有网卡（同局域网设备可直接访问；只想本机用可 `HOST=127.0.0.1 bun run serve`）。使用它可以在不污染 `uploads/` 文件夹的情况下管理文件。注意这种方式没有对接 ImQi1 CMS 的文件上传功能，需要手动把文件放进 `.attachments`，并且附件功能也未适配。
 
 开发完成后，参照下一节做好生产环境的相关配置，就可以打包部署了。
 
@@ -168,7 +171,7 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
 
 生产环境采用「**本地打包 → 上传产物 → 服务器运行 Node 服务**」的部署模式。
 
-> 📌 **关于端口号**：下文出现的端口均为各路径的默认示例，均可任意修改——开发服务器默认 `3000`、裸机生产示例用 `DEPLOY_PORT=3000`、Docker 示例用 `DEPLOY_PORT=3000`，只需保持 `DEPLOY_PORT`、Nginx 反代目标与容器端口映射三者一致即可。
+> 📌 **关于端口号**：下文端口均为默认示例，可任意修改。注意有两套变量：应用真正监听的端口是运行环境的 `PORT`（见第 8 节），`DEPLOY_PORT` 只喂给 Nginx 配置生成与 Docker 的宿主端口映射。**裸机部署**须让 `PORT` 与 `DEPLOY_PORT` 相等——Nginx 的反代目标就是 `127.0.0.1:${DEPLOY_PORT}`，只改一个会断掉反代。**Docker 部署**下 `DEPLOY_PORT` 即宿主端口（容器内固定 `3000`）。
 
 ### 1. 准备开发环境
 
@@ -179,8 +182,6 @@ ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个�
 在项目根目录的 `.env` 中补充生产环境相关变量（可参考 `.env.example`）。关键项包括：
 
 ```shell
-# Redis 不在这里配置：默认值写在 site.config.ts 的 build.redis（见下方说明）
-
 # 腾讯云 COS 对象存储（可选，用于上传静态资源到 COS）
 COS_SECRET_ID=""
 COS_SECRET_KEY=""
@@ -233,7 +234,7 @@ security: {
 },
 ```
 
-> 该文件同时被 `nuxt.config.ts`、前端与服务端引用，是 CSP、SEO meta、CDN 前缀、Referer 白名单等构建时数据的来源（**PWA manifest 不在此列**——它是静态文件 `public/manifest.webmanifest`），需在**打包前**配置好。
+> 该文件同时被 `nuxt.config.ts`、前端与服务端引用，是 CSP、SEO meta、CDN 前缀、Referer 白名单等构建时数据的来源。
 
 ### 4. 本地打包
 
@@ -241,19 +242,25 @@ security: {
 bun run build
 ```
 
-产物位于 `.output/` 目录。构建 hash 由 `nuxt.config.ts` 的 `genBuildHash()` 在打包时生成，`postbuild` 钩子负责把它落盘为 `.output/build-hash.json` 并更新 Service Worker 的 CDN 引用；运行时资源（`qqwry.ipdb` IP 库、验证码字体、svg2png WASM、`emojis.json`）由 Nitro 构建收尾的钩子与 postbuild 的 `copy-data.ts` 双侧保证拷到 `.output/server/runtime-assets/`。
+产物位于 `.output/` 目录，内部包含一个前端文件目录、服务端代码目录、nitro 版本信息和构建哈希。
 
 > ⚠️ **本地上传目录建议设置 `UPLOADS_DIR`**。附件若使用「本地上传」（非 COS），默认写入 `.output/public/uploads`；而 `bun run build` 会删除并重建整个 `.output`，**重新打包后已上传的文件会全部丢失**。请在运行环境变量中把 `UPLOADS_DIR` 指向 `.output` 之外的独立绝对路径（如 `/www/wwwroot/your-site/uploads`）持久保存，详见下文第 8 节。使用腾讯云 COS 存储的用户不受影响。
 
 > **本地用 `nuxi preview` 验证打包产物时，建议先把 `site.config.ts` 的 `security.enableCsp` 改为 `false`**。CSP 仅在生产构建注入，会拦截音乐直链、地图第三方脚本等，干扰本地功能验证；确认功能正常后改回 `true` 再打正式包。
 
-### 5. 上传静态资源到 CDN（可选）
+### 5. 上传构建产物到 CDN（可选）
 
-如果使用 CDN，将 `public/` 目录下的静态资源上传到 CDN。若对象存储使用腾讯云 COS，在 `.env` 中配置好 `COS_*` 变量后可直接执行：
+使用 CDN 时，构建产物需要放到 CDN 的 `static/<hash>/` 目录下（引用路径由构建 hash 与 `site.config.ts` 的 `site.cdnUrl` 共同决定）。若对象存储使用腾讯云 COS，在 `.env` 中配置好 `COS_*` 变量后，**在本地打包之后**执行：
 
 ```bash
 bun run upload:cos
 ```
+
+上传来源是 `.output/public`（**不是源码里的 `public/`**），且默认只收构建产物：`.js` / `.css` 及其 `.br` / `.gz` 预压缩变体、`builds/**` 懒加载元数据；目标前缀取自 `.output/build-hash.json` 的 `dir`（即 `static/<hash>`）。该文件不存在时脚本会直接报错退出，所以**必须先 `bun run build`**。
+
+`imgs/` / `fonts/` / `icons/` / `skills/` / `emojis/` / `uploads/` 这些静态目录，以及 `manifest.webmanifest`、`sw.js` **都不在**默认上传范围内（由 CDN 回源到站点提供）。
+
+> ⚠️ 上传前脚本会交互式询问「是否清空远程目录」，答 `y` 才继续、答 `n` 则取消本次上传（不动已有文件）。清空范围限于上面那个 `static/<hash>` 前缀，不是整个存储桶。
 
 ### 6. 上传服务端产物到服务器（可选）
 
@@ -284,7 +291,13 @@ bun run upload:server -- --node-modules
 scripts/init-db.sql
 ```
 
-该脚本与开发环境完全一致，会创建全部 16 张数据表，且幂等可重复执行。默认管理员账户为 `admin` / `123456`（登录后请立即修改密码）。
+SQL 与开发环境用的是同一份（`scripts/init-db.sql`），会创建全部 16 张数据表，且幂等可重复执行。默认管理员账户为 `admin` / `123456`（登录后请立即修改密码）。文件末尾的 `pg_trgm` 扩展与索引需要超级用户权限，导入账号权限不足时会报错（可单独用超级用户执行该段）。
+
+> ⚠️ 手动导入只执行 SQL 本身：**不会**自动建库、**不会**把库时区设为 UTC，两者需自行处理。时区非 UTC 会影响归档分组与按时间排序（开发环境第 8 步的 `bun run db:init` 会在执行 SQL 前替你设好）。可自行补一句：
+>
+> ```sql
+> ALTER DATABASE "你的库名" SET timezone = 'UTC';
+> ```
 
 ### 8. 指定服务器运行环境变量
 
@@ -300,7 +313,6 @@ DB_NAME="nodejs"
 
 # 运行环境
 PORT=3000
-NODE_PROJECT_NAME="your-project-name"
 # 必须为完整单词 production（写 prod / 留空会按非生产处理）：构建与启动都需要。
 # 非 production 时 CDN 前缀 / 构建 hash 目录 / PWA start_url / cookie secure 等不生效（这些判断都是 === "production"）。
 # 注意：referer 与小程序签名校验只在 NODE_ENV=development 时整段跳过——写 prod 或留空**不会**跳过，仍按生产强制校验。
@@ -313,7 +325,8 @@ UV_THREADPOOL_SIZE=64
 UPLOADS_DIR="/www/wwwroot/your-site/uploads"
 
 # Redis 无需在此配置：Redis 是构建期配置（源头在 site.config.ts 的 build.redis），
-# 打包时烘焙进产物，生产运行时不再读取 Redis 环境变量（见上文「生产环境搭建」第 2 节）。
+# 打包时已烘焙进产物（见上文「生产环境搭建」第 2 节）。同时不要设 NUXT_REDIS_* / NITRO_REDIS_*——
+# 它们会在运行时覆盖烘焙值（见 docker/README.md「运行时覆盖」）。
 
 # 高德地图，可选
 # key / securityCode 均为运行时读取，不烘焙进构建产物：
@@ -322,6 +335,19 @@ UPLOADS_DIR="/www/wwwroot/your-site/uploads"
 # - 开发环境恒直连：浏览器需 key 加载高德 JS，开发运行时从环境变量读取。
 AMAP_KEY="your_amap_key"
 AMAP_SECURITY_CODE="your_amap_security_code"
+
+# 反向代理（生产在 Nginx 之后时必配）
+# 填前端接入层的回源 IP 或网段（逗号分隔，支持 CIDR）。不配则 X-Forwarded-For 被忽略、
+# 所有访客 IP 塌缩成反代 IP——访客地图与评论 IP 记录会全部失真。
+TRUSTED_PROXY="127.0.0.1"
+
+# 微信小程序码（可选）：留空则 /api/qrcode 返回 404，前台自动隐藏「小程序看」入口
+WECHAT_MINI_APPID=""
+WECHAT_MINI_SECRET=""
+
+# 登录令牌签名密钥（2FA challenge 与「信任此设备」cookie）
+# 留空会退回 SSR 密钥、再退化为每次启动随机生成——信任设备状态重启即失效。
+LOGIN_SECRET=""
 
 # SSR 内部请求密钥 / 小程序 API 密钥（建议填写随机长字符串）
 SSR_INTERNAL_REQUEST_SECRET="your_random_secret"
@@ -380,7 +406,7 @@ Docker 部署文件已整理进 `docker/` 子目录，提供**两套独立版本
 - **带 Redis**（`docker/docker-compose.yml` + `docker/Dockerfile`）：应用 + PostgreSQL 16 + Redis 7。默认烘焙 `redis:6379`（compose 服务名）并启动 redis 容器，ISR 增量缓存与搜索缓存共用。
 - **不带 Redis**（`docker/docker-compose.noredis.yml` + `docker/Dockerfile.noredis`）：仅应用 + PostgreSQL 16。ISR 走文件系统缓存、搜索缓存关闭，不创建 redis 容器/卷。
 
-**是否启用 Redis 只由「选哪套 compose 文件」决定**：compose 的 `build.args` 是固定字面量，不读环境变量，所以 `.env` 里不需要也不应该写 `REDIS_*`（也不需要任何 `COMPOSE_PROFILES` 之类的环境变量魔法）。要指定连哪台 Redis、端口、DB 号，在**构建命令里用 `--build-arg` 覆盖**，例如 `--build-arg REDIS_HOST=10.0.0.5`（可用变量：`REDIS_ENABLED` / `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB`；不支持密码，见下文）。两个版本的具体用法、启动命令与运维命令见 **[`docker/README.md`](docker/README.md)**。
+**是否启用 Redis 只由「选哪套 compose 文件」决定**：compose 的 `build.args` 是固定字面量，不读环境变量，所以 `.env` 里不需要也不应该写 `REDIS_*`（也不需要任何 `COMPOSE_PROFILES` 之类的环境变量魔法）。要指定连哪台 Redis、端口、DB 号，在**构建命令里用 `--build-arg` 覆盖**，例如 `--build-arg REDIS_HOST=10.0.0.5`（可用变量：`REDIS_ENABLED` / `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB`；默认部署的 redis 只在 compose 内网可达、未开鉴权，故**不支持密码**——原因与自行加密码的做法见 [`docker/README.md`](docker/README.md) 的「指定 Redis 参数」）。两个版本的具体用法、启动命令与运维命令见 **[`docker/README.md`](docker/README.md)**。
 
 前置要求：服务器已安装 **Docker** 与 **Docker Compose v2**（`docker compose version` 可用）。
 
@@ -409,18 +435,21 @@ DEPLOY_PORT=3000                   # 宿主对外端口，按需修改
 常用可选变量（按需添加，均可留空）：
 
 ```bash
-UPLOADS_DIR=""                 # 上传目录宿主路径；默认项目根 uploads/，本地可见
+UPLOADS_DIR=""                 # 上传目录宿主路径；默认项目根 uploads/；自填建议用绝对路径——相对路径以 docker/ 为基准
 AMAP_KEY=""                    # 高德地图 Key（旅行足迹地图功能）
 AMAP_SECURITY_CODE=""          # 高德 JS API 安全密钥
 SSR_INTERNAL_REQUEST_SECRET="" # SSR 内部请求密钥（建议随机长串）
 MINI_API_SECRET=""             # 小程序 API 签名密钥
+TRUSTED_PROXY="172.16.0.0/12"  # 反代回源网段（见下方说明）
 ```
 
 > `DB_HOST` 会被 compose 自动覆盖为服务名 `postgres`，**无需手动填写容器名**。Redis：需要就用带 Redis 的版本（`docker-compose.yml`），不需要就选不带 Redis 的版本——**无需在 `.env` 里配任何 Redis 变量**；要改 Redis 地址等，在构建命令里加 `--build-arg`（见上文；**不支持密码**）。其它 COS 等按需填写，完整变量见 `.env.example`。
 >
-> ⚠️ **PG 单用户即超级用户**，不像 MySQL 区分 `root` / `MYSQL_USER`；`DB_USER` 设成 `postgres` 也能跑，但建议沿用普通用户名（如 `nodejs`）保持历史命名习惯。`DB_PASSWORD` 会作为 `POSTGRES_PASSWORD` 直接传给镜像，应用与 healthcheck 全程只使用这个用户。
+> ⚠️ **PG 单用户即超级用户**，不像 MySQL 区分 `root` / `MYSQL_USER`；`DB_USER` 设成 `postgres` 也能跑，但建议沿用普通用户名（如 `imqi1`）保持历史命名习惯。`DB_PASSWORD` 会作为 `POSTGRES_PASSWORD` 直接传给镜像，应用与 healthcheck 全程只使用这个用户。
+>
+> ⚠️ **建议配置 `TRUSTED_PROXY`**：端口映射下容器看到的对端是 **docker 网桥网关**（不是 `127.0.0.1`），不在白名单里就会被当成不可信来源、忽略 `X-Forwarded-For`，结果所有访客 IP 都塌缩成网关 IP——评论入库 IP、足迹去重、限流键全部合并成一个。网段由 docker 动态分配，所以要**写网段而不是单个网关 IP**（如 `172.16.0.0/12`）；详见 `server/utils/client-ip.ts` 的部署注意。
 
-改动 site.config.ts 的配置，改成你自己的，比如 CDN 路径。
+改动 site.config.ts 的配置，改成你自己的，比如 CDN 路径。配了 CDN 的话，构建完成后用 `bun run export:bundle` 从镜像里导出 `.output/public` 到 `./dist/<hash>/`，把整个目录上传到 CDN 的 `static/<hash>/` 即可。
 
 ### 2. 构建并启动
 
@@ -440,6 +469,13 @@ docker compose --env-file .env -f docker/docker-compose.noredis.yml up -d --buil
 - 密码：`123456`（登录后请立即在后台「账户设置」修改）
 
 > 该自动初始化**仅在 `pg-data` 数据卷为空时执行一次**（即首次部署）。之后重新 `up`/重建不会再次执行，也**不会覆盖或清空已有数据**。因此无需再手动运行任何初始化命令。
+>
+> 这条路径只执行 SQL 本身，**不含** `bun run db:init` 里那句 `ALTER DATABASE ... SET timezone = 'UTC'`。实践中无碍：`postgres:16-alpine` 容器自身就是 UTC，PG 建库时按系统时区取默认值，落库即 UTC。若你改过容器时区或换了基础镜像，需自行补一句：
+>
+> ```bash
+> docker compose --env-file .env -f docker/docker-compose.yml exec postgres \
+>   psql -U imqi1 -d imqi1-cms -c "ALTER DATABASE \"imqi1-cms\" SET timezone = 'UTC';"
+> ```
 
 ### 3. 验证
 
@@ -447,7 +483,7 @@ docker compose --env-file .env -f docker/docker-compose.noredis.yml up -d --buil
 # 查看 app/postgres（+ redis，若用带 Redis 版本）状态（healthy/up）
 docker compose --env-file .env -f docker/docker-compose.yml ps
 docker compose --env-file .env -f docker/docker-compose.yml logs -f app   # 查看应用日志
-curl http://localhost:3000       # 或浏览器访问 服务器IP:3000
+curl "http://localhost:${DEPLOY_PORT:-3000}"   # 或浏览器访问 服务器IP:对应端口
 ```
 
 ### 4. 常用运维命令
@@ -466,12 +502,14 @@ docker compose --env-file .env -f docker/docker-compose.yml down   # 停止并�
 # 查看日志
 docker compose --env-file .env -f docker/docker-compose.yml logs -f postgres
 
-# 进入 PostgreSQL 命令行（库名以 .env 中的 $DB_NAME 为准）
-docker compose --env-file .env -f docker/docker-compose.yml exec postgres psql -U "$DB_USER" -d "$DB_NAME"
+# 进入 PostgreSQL 命令行（用户名 / 库名换成你 .env 里的 DB_USER / DB_NAME）
+docker compose --env-file .env -f docker/docker-compose.yml exec postgres psql -U imqi1 -d imqi1-cms
 
 # 数据备份
-docker compose --env-file .env -f docker/docker-compose.yml exec postgres pg_dump -U "$DB_USER" "$DB_NAME" > backup.sql
+docker compose --env-file .env -f docker/docker-compose.yml exec postgres pg_dump -U imqi1 imqi1-cms > backup.sql
 ```
+
+> 上面两处的用户名 / 库名请替换成你 `.env` 里的实际值。**别写成 `"$DB_USER"` / `"$DB_NAME"`**：`--env-file .env` 只把变量提供给 compose，**不会**进当前 shell，没 `export` 时它们展开成空串、命令会直接报错。确实想在命令里用变量名，可以先 `set -a; . ./.env; set +a` 导入当前 shell（注意 `.env` 里含 `$` 的值会被 shell 展开，密码较复杂时建议直接填字面值）。
 
 > ⚠️ **重新构建/升级前，请先在后台备份数据**
 >
@@ -492,15 +530,17 @@ docker compose --env-file .env -f docker/docker-compose.yml exec postgres pg_dum
 对数据库执行一句 SQL 即可（**无需安装任何额外依赖**，容器 / psql / 宝塔数据库管理任选其一）：
 
 ```bash
-# Docker（服务名 postgres；库名/账号以 .env 的 $DB_NAME/$DB_USER 为准）
+# Docker（服务名 postgres；用户名 / 库名换成你 .env 里的 DB_USER / DB_NAME）
 docker compose --env-file .env -f docker/docker-compose.yml exec postgres \
-  psql -U "$DB_USER" -d "$DB_NAME" \
+  psql -U imqi1 -d imqi1-cms \
   -c "UPDATE users SET totp_enabled = false, totp_secret = NULL;"
 
 # 或直连 psql： psql "<连接串>" -c "UPDATE users SET totp_enabled=false, totp_secret=NULL;"
 ```
 
 > 只动 `totp_enabled` / `totp_secret` 两列，不影响密码、会话与 `auth_code`（登录态不失效）。单用户博客即清除当前管理员。执行后可用账号 + 密码登录。
+>
+> `trusted_devices` 表（此前勾选过「信任此设备」的记录）不受影响：重新启用 2FA 后，这些浏览器仍会免输动态码。要么重新启用后到后台「用户」页的设备列表里撤回，要么顺手清掉：`-c "DELETE FROM trusted_devices;"`。
 >
 > 开发环境 / 有 node_modules 的构建机不想手写 SQL 时，可跑 `bun run reset:2fa`（`scripts/reset-2fa.ts`；bun 原生编译 TS 无需 tsx，依赖 `@prisma/client`、`@prisma/adapter-pg` 均为**根依赖**，非 scripts 专属）。
 
@@ -534,7 +574,8 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 | --- | --- | --- |
 | 站点基础设置 | `site.name` / `site.url` / `site.cdnUrl` / `site.rootDomain` | 站点名、访问地址、CDN 根地址与主域名。 |
 | | `site.avatarPath` / `site.ownerName` | 站点头像与站长名。站点图标（SVG）经 `seo.ogImage` 供 og:image 与页头 logo 使用。 |
-| 构建 | `build.brotliCompression` | 构建时是否预压缩静态资源为 brotli（`.br`），需 Nginx / CDN 配合发送预压缩文件。 |
+| 构建 | `build.brotliCompression` | 是否预压缩静态资源（Nuxt 的 `compressPublicAssets`，同时产出 `.br` 与 `.gz`），需 Nginx / CDN 配合发送预压缩文件。 |
+| | `build.statsHtml` | 是否生成 vite 体积分析 `stats.html`；默认 `false`，需要排查包体积时临时打开。 |
 | | `build.redis` | Redis 连接配置（仅生产构建生效）。裸机部署改这里；Docker 由构建参数覆盖，改这里无效。 |
 | 安全 | `security.allowedRefererDomains` | 允许访问 `/api/*` 的 Referer 域名白名单（`/api/mini/*` 除外，走签名鉴权）。 |
 | | `security.enableCsp` | 是否启用 CSP（内容安全策略）。 |
@@ -555,7 +596,7 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 
 项目的常用命令都收敛在根目录 `package.json` 的 `scripts` 中，下面按用途分组说明。带 `pre` / `post` 前缀的钩子（`postbuild`、`postinstall`）由 Bun 在对应主命令前后自动执行，一般无需手动调用。
 
-> **运维脚本的独立依赖**：部分脚本（`upload:cos`、`upload:server`、`compress:livephoto`、`db:init` 等）依赖较重的包（`ffmpeg-static` 约 80M、`cos-nodejs-sdk-v5`、`ssh2-sftp-client`、`pg`、`tsx`）。这些包已从根 `package.json` 移到 `scripts/package.json` 单独管理，**不参与主项目 `bun install` 与 Docker 构建**，以加快日常安装。首次运行这些脚本前，先执行一次 `bun run scripts:install`（即 `bun install --cwd scripts`）安装脚本依赖。脚本中共享的轻量依赖（如 `dotenv`、`bcryptjs`、`ipdb`）仍由根 `node_modules` 提供，无需重复安装。
+> **运维脚本的独立依赖**：部分脚本（`upload:cos`、`upload:server`、`compress:livephoto` 等）依赖较重的包（`ffmpeg-static` 约 80M、`cos-nodejs-sdk-v5`、`ssh2-sftp-client`、`sharp`、`tsx`）。这些包已从根 `package.json` 移到 `scripts/package.json` 单独管理，**不参与主项目 `bun install` 与 Docker 构建**，以加快日常安装。首次运行这些脚本前，先执行一次 `bun run scripts:install`（即 `bun install --cwd scripts`）安装脚本依赖。脚本中共享的轻量依赖（如 `dotenv`、`bcryptjs`、`ipdb`）仍由根 `node_modules` 提供，无需重复安装——`pg` 也属这一档，所以 `db:init`、`reset:2fa`、`reset:password` 直接用根依赖就能跑，不必先 `scripts:install`。
 
 ### 开发与构建
 
@@ -573,18 +614,20 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 |---------------------------|-----------------------------------------------------------------------------------------|
 | `bun run prisma:generate` | 生成 Prisma Client（等价于 `bun prisma generate`）。修改 `schema.prisma` 后需重新执行。 |
 | `bun run prisma:studio`   | 打开 Prisma Studio 可视化查看 / 编辑数据库。                                            |
-| `bun run db:init`         | 执行 `scripts/init-db.sql`，一步完成建表、写入默认设置并插入示例数据；幂等可重复执行。  |
+| `bun run db:init`         | 建库（不存在时）+ 把库时区设为 UTC + 执行 `scripts/init-db.sql`，一步完成建表、写入默认设置并插入示例数据；幂等可重复执行。 |
 | `bun run reset:password`  | 重置指定用户的登录密码，忘记后台密码时使用。                                            |
+| `bun run reset:2fa`       | 清除全部用户的 TOTP 两步验证（丢失认证器被锁在「输动态码」那步时用），执行后可用密码登录。 |
 
 ### 部署与运维
 
 | 命令                     | 说明                                                                                          |
 |--------------------------|-----------------------------------------------------------------------------------------------|
-| `bun run upload:cos`     | 将 `public/` 静态资源上传到腾讯云 COS（需配置 `.env` 中的 `COS_*`）。                         |
+| `bun run upload:cos`     | 将 `.output/public` 里的构建产物上传到腾讯云 COS 的 `static/<hash>/`（需先 `bun run build`，并配置 `.env` 中的 `COS_*`）。 |
 | `bun run upload:server`  | 通过 SFTP 将 `.output/server` 上传到服务器（需配置 `SERVER_*`）；支持 `-- --dry-run` 预览；默认跳过 `node_modules` 与 `runtime-assets/`，加 `--node-modules` 一并上传（首次部署/资源更新时用）。   |
+| `bun run export:bundle`  | 从构建好的镜像导出 `.output/public` 到 `./dist/<hash>/`，整个目录上传到 CDN 的 `static/<hash>/` 即可（**Docker 部署 + CDN 的取产物方式**，需先 `up -d --build`）。 |
 | `bun run restart:server` | 通过宝塔面板 API 远程重启服务器上的 Node 项目；支持 `-- start` / `-- stop`（需配置 `BT_*`）。 |
 | `bun run nginx:generate` | 根据 `.env` 中的 `DEPLOY_*` 变量生成参考 Nginx 配置，填写到宝塔面板 node 管理器中的伪静态中。   |
-| `bun run clear:redis`    | 通过宝塔面板 API 远程清空 Redis 中的 ISR / 搜索缓存。                                         |
+| `bun run clear:redis`    | 通过宝塔面板 API 远程 **flush 该 Redis 实例的全部库（db 0–15）**。站点的 ISR / 搜索缓存都在 db 0，效果即清空缓存；但同实例上别的库也会被一起清掉。 |
 
 ### 辅助工具
 
@@ -594,6 +637,7 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 | `bun run check:update`       | 从 npm 检查项目依赖是否有新版本。                                 |
 | `bun run get:ip`             | 查询 IP 的地理归属信息（IP 归属地数据库工具），基于纯真IP数据库。 |
 | `bun run compress:livephoto` | 压缩实况照片（JPEG + 内嵌 MP4 的合并文件）。                      |
+| `bun run tailwindcss:lint`   | 检查 Tailwind 类名（`@apply` 指令、类名冲突、canonical 写法建议）；仓库三项自测之一。 |
 
 ### 小程序（`mini/` 子模块）
 
@@ -658,7 +702,7 @@ bun run mini:dev:mp-weixin
 bun run mini:dev:mp-alipay
 ```
 
-微信 / 支付宝端还需在对应的开发者工具中填入自己的 AppId（`src/manifest.json` 的 `mp-weixin.appid` / `mp-alipay.appid`），并将主站 API 域名加入平台的 **request 合法域名**。
+微信 / 支付宝端还需在对应的开发者工具中填入自己的 AppId：`src/manifest.json` 里 `mp-weixin.appid` 预置的是作者自己的 AppId，**记得改成你自己的**；`mp-alipay` 段没有该字段，在开发者工具里填即可。同时把主站 API 域名加入平台的 **request 合法域名**。
 
 ### 打包发布
 
@@ -676,21 +720,29 @@ bun run mini:build:h5          # H5 静态站点，可单独部署
 
 每次通过 Claude Code 等软件更新代码并提交后，可让它生成符合后台一键导入格式的更新日志。
 
-格式：
+一份更新日志由若干**条目**组成，条目类型定义在 `shared/changelog.ts`：
 
 ```ts
-type Changelogs = Changelog[];
-
-type Changelog = {
-  createTime: string;
-  entries: ChangelogItem[];
-};
-
-type ChangelogItem = {
-  type: "新增" | "修改" | "修复" | "优化" | "设计" | "删除" | "其他";
-  value: string;
+type ChangelogEntry = {
+  // 合法类别即 CHANGELOG_TYPES，顺序也是后台的展示顺序
+  type: "功能" | "优化" | "修复" | "删除" | "设计" | "新增" | "其他";
+  value: string; // 支持 markdown
 };
 ```
+
+后台「一键导入」接受两种 JSON 形态（见 `server/api/admin/changelogs/import.post.ts`）：
+
+```ts
+// ① 单条记录：直接给条目数组
+[{ "type": "功能", "value": "新增 xxx" }]
+
+// ② 多条记录：每个元素含 entries；createTime 可选，用于排序（也可直接给单个 { entries: [...] } 对象）
+[
+  { "createTime": "2026-06-22", "entries": [{ "type": "修复", "value": "修了什么" }] }
+]
+```
+
+> ⚠️ `type` 写错**不会报错**：`normalizeChangelogEntries` 会把非法类别静默回退成「其他」。注意类别是**「功能」**，没有「修改」。
 
 ## 辅助功能
 
@@ -717,7 +769,7 @@ type ChangelogItem = {
 | 本地 `bun run preview` 时页脚音乐、高德地图等被拦截 | CSP 仅在生产构建注入，会拦第三方直链 / 脚本。把 `site.config.ts` 的 `security.enableCsp` 临时改 `false`，验证完改回 `true`。 |
 | Bun 相关命令异常 | 项目要求 Bun ≥ 1.3（`packageManager` 锁定 `bun@1.4.0`），版本过低请升级。 |
 | 小程序请求 `/api/mini/*` 返回 401 / 签名校验失败 | 主站 `MINI_API_SECRET` 与小程序 `VITE_MINI_API_SECRET` 必须完全一致；其中一端留空时另一端也必须留空。 |
-| 改了 `DB_NAME` 后 Docker 节里的 `psql` / `pg_dump` 命令连不上 | 这些命令请用 `"$DB_NAME"` 而非硬编码库名，详见 [「使用 Docker 部署」](#使用-docker-部署)。 |
+| Docker 节里的 `psql` / `pg_dump` 命令连不上（报无此用户 / 库） | 命令里的用户名 / 库名要换成 `.env` 里 `DB_USER` / `DB_NAME` 的实际值。`--env-file .env` 只喂给 compose、不进 shell，所以 `"$DB_NAME"` 在没 `export` 时展开成空串——想用变量名先 `set -a; . ./.env; set +a`。详见 [「使用 Docker 部署」](#使用-docker-部署)。 |
 | Firefox 下实况照片无法播放 | 多为 HEVC 编码，Firefox 暂不支持，会自动降级为静态图；如需播放需服务端转码。 |
 | Docker 构建报 `lockfile had changes, but lockfile is frozen` | 镜像 `oven/bun` 与本地 bun 大版本不一致。本仓库 `package.json` 锁定 `bun@1.4.0`，`docker/Dockerfile*` 的 builder 阶段已统一改为 `oven/bun:1.4`；若你 fork 后改回 1.3.x 会触发此错。 |
 
@@ -736,7 +788,7 @@ type ChangelogItem = {
 - **查看文档**：[docs.qi1.website](https://docs.qi1.website)——多数部署与使用问题在文档里已有答案。
 - **报告 Bug / 提需求**：使用 [Issue 模板](https://github.com/imqi1-github/imqi1-cms/issues/new/choose) 提交，模板已要求确认「问题与本项目相关、文档无对应说明」，**与本项目无关的问题请勿在此提交**（通用浏览器/系统问题、第三方服务问题、个人项目托管问题等，请到对应上游反馈）。
 - **提交代码**：从 `master` 拉分支，自测通过（`bunx eslint .` / `bunx nuxi typecheck` / `bun run tailwindcss:lint`）后提 PR。
-- **安全相关**：疑似漏洞请**私密**报告（仓库 → Security → Report a vulnerability），别在公开 Issue 披露——见 [SECURITY.md](SECURITY.md)。
+- **安全相关**：疑似漏洞请**私密**报告（仓库 → Security → Report a vulnerability），别在公开 Issue 披露——见 [SECURITY.md](SECURITY.md)；其中的**已知局限**与**威胁模型与范围**两节列了已知开放口子与既定设计，报告前先过一眼，避免重复报告。
 
 项目采用 [AGPL-3.0](LICENSE) 开源许可。
 

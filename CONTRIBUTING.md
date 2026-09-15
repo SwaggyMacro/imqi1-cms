@@ -12,7 +12,7 @@
 
 ## 环境准备
 
-- [bun ≥ 1.4](https://bun.sh)（包管理用 `bun`，`package.json` 的 `packageManager` 已钉死 `bun@1.4.0`）
+- [bun ≥ 1.3](https://bun.sh)（包管理用 `bun`，`package.json` 的 `packageManager` 已钉死 `bun@1.4.0`）
 - Node（交由 bun 管理）
 - PostgreSQL（本地或 Docker）
 - 克隆时初始化小程序子模块：

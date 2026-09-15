@@ -977,7 +977,7 @@ usePageSeo({
 const homeAnnounce = computed(() => siteSettings.value?.homeCustomText || siteConfig.pages.homeCustomText);
 
 // 图片分类slug
-const photoCategorySlug = computed(() => homeData.value?.data?.site?.photoCategorySlug || "shot");
+const photoCategorySlug = computed(() => homeData.value?.data?.site?.photoCategorySlug ?? "");
 
 // 联系链接配置
 // siteConfig.pages.homeLinks 是模块级常量,不会响应式变化,无需 ref 包装。

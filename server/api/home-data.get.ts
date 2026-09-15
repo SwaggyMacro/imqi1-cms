@@ -16,7 +16,7 @@ export default defineEventHandler(async event => {
       where: { key: "photoCategorySlug" },
       select: { value: true },
     });
-    const photoCategorySlug = (photoCategoryInfo?.value as string) || "shot";
+    const photoCategorySlug = (photoCategoryInfo?.value as string) ?? "";
 
     // 2. 获取图片分类的 mid（一次查询）
     const photoCategory = await prisma.metas.findFirst({

@@ -37,13 +37,13 @@ export function formatRelativeTime(value: Date) {
   return `${Math.floor(diff / year)} 年前`;
 }
 
-/** 解析图片分类 mid（默认 slug "shot"，需 type:"category" 判别，避免同 slug 的 tag 误命中）。 */
+/** 解析图片分类 mid（需 type:"category" 判别，避免同 slug 的 tag 误命中）。DB 未配置 → 返回 undefined。 */
 export async function getPhotoCategoryMid() {
   const photoCategorySlugInfo = await prisma.informations.findUnique({
     where: { key: "photoCategorySlug" },
     select: { value: true },
   });
-  const photoCategorySlug = photoCategorySlugInfo?.value || "shot";
+  const photoCategorySlug = photoCategorySlugInfo?.value || "";
 
   const photoCategory = await prisma.metas.findFirst({
     where: { slug: photoCategorySlug, type: "category" },

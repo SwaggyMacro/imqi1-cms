@@ -178,7 +178,7 @@ const commentEnabled = computed(() => siteSettings.value?.commentEnabled ?? true
 const { isLoggedIn, isLoadingAuth } = useAuth();
 
 // 判断是否为图片分类
-const photoCategorySlug = computed(() => siteSettings.value?.photoCategorySlug || "shot");
+const photoCategorySlug = computed(() => siteSettings.value?.photoCategorySlug ?? "");
 const isPhotoCategory = computed(() => categorySlug === photoCategorySlug.value);
 
 // 获取相关文章（根据标签筛选）

@@ -21,7 +21,7 @@ const apiSlug = ref(slug.value);
 // 使用全局站点设置
 const { siteSettings } = useSiteSettings();
 const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
-const photoCategorySlug = computed(() => siteSettings.value?.photoCategorySlug || "shot");
+const photoCategorySlug = computed(() => siteSettings.value?.photoCategorySlug ?? "");
 const contentPageSize = computed(() => siteSettings.value?.contentPageSize || 12);
 
 // 从 URL query 参数中获取页码

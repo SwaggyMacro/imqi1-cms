@@ -15,9 +15,12 @@ const btnShell = computed(() =>
 );
 
 // 解析音乐播放列表 ID
+// DB 未配置 musicPlaylistId → playlistConfig 为 null，模板整段不渲染、不调 initPlayer
 const playlistConfig = computed(() => {
-  const config = settings.value?.musicPlaylistId || "9255074836 || netease";
+  const config = settings.value?.musicPlaylistId;
+  if (!config) return null;
   const [id = "", server = "netease"] = config.split("||").map((s: string) => s.trim());
+  if (!id) return null;
   return { id, server };
 });
 
@@ -28,8 +31,9 @@ const { currentSong, isPlaying, isLoaded, isDisabled, progress, initPlayer, togg
 // 先用 setTimeout 让出英雄区渐入/字体稳定窗口，再交给 requestIdleCallback 等空闲
 // 时段拉取歌单并创建 Audio；不支持 rIC 的浏览器回退到固定延时。
 onMounted(() => {
+  if (!playlistConfig.value) return;
   const MIN_DELAY = 1200;
-  const start = () => initPlayer(playlistConfig.value);
+  const start = () => initPlayer(playlistConfig.value!);
   if (typeof requestIdleCallback === "function") {
     setTimeout(() => requestIdleCallback(start), MIN_DELAY);
   } else {
@@ -45,6 +49,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <template v-if="playlistConfig">
     <button
       v-if="isLoaded && currentSong"
       class="group relative flex items-center gap-2 rounded-full py-0.75 pr-0.75 pl-2 cursor-pointer transition-all duration-300 overflow-hidden max-w-36 h-7.5"
@@ -98,6 +103,7 @@ onBeforeUnmount(() => {
         <Icon name="lucide:loader-2" class="size-3.5 animate-spin text-gray-400 dark:text-gray-500" mode="svg" />
       </span>
     </div>
+  </template>
 </template>
 
 <style scoped>

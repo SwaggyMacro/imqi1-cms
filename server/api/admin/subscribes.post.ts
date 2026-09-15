@@ -1,6 +1,6 @@
 import { prisma } from "#server/utils/prisma";
 import { getUser } from "#server/lib/auth";
-import { validateSubscribeData, setLengthWarnings } from "#server/utils/validation";
+import { validateSubscribeData } from "#server/utils/validation";
 import { validateCsrfToken } from "#server/utils/csrf";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 
@@ -28,11 +28,12 @@ export default defineEventHandler(async event => {
   }
 
   try {
-    setLengthWarnings(event, validateSubscribeData({
+    // 验证字段长度
+    validateSubscribeData({
       name: body.name,
       url: body.url,
       avatar: body.avatar,
-    }));
+    });
 
     const subscribe = await prisma.subscribes.create({
       data: {

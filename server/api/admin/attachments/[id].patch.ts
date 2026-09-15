@@ -2,7 +2,7 @@ import prisma from '#server/utils/prisma'
 import { getUser } from '#server/lib/auth'
 import { validateCsrfToken } from '#server/utils/csrf'
 import { invalidateContentCaches } from '#server/utils/content-cache'
-import { validateAttachmentData, setLengthWarnings } from '#server/utils/validation'
+import { validateAttachmentData } from '#server/utils/validation'
 
 export default defineEventHandler(async event => {
   // 鉴权与 CSRF 放在 try 块外：这两条安全不变式不应进入会吞错的 catch
@@ -49,11 +49,12 @@ export default defineEventHandler(async event => {
     // body.name 若非字符串：长度校验会因 value.length 为 undefined/数值而绕过，写入 Prisma 会打挂成 500；先收窄类型
     const title = typeof body.name === 'string' ? body.name : ''
 
-    setLengthWarnings(event, validateAttachmentData({
+    // 验证字段长度
+    validateAttachmentData({
       title,
       type: existing.type,
       url: existing.url,
-    }))
+    })
 
     const cidList: number[] | null = body.cids !== undefined
       ? (Array.isArray(body.cids)

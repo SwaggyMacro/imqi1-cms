@@ -1,7 +1,7 @@
 import { getUser } from "#server/lib/auth";
 import { prisma } from "#server/utils/prisma";
 import { validateCsrfToken } from "#server/utils/csrf";
-import { validateMetaData, setLengthWarnings } from "#server/utils/validation";
+import { validateMetaData } from "#server/utils/validation";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 
 export default defineEventHandler(async event => {
@@ -54,7 +54,8 @@ export default defineEventHandler(async event => {
     throw createError({ statusCode: 400, message: "标签描述格式错误" });
   }
 
-  setLengthWarnings(event, validateMetaData({ name, slug, desc }));
+  // 验证字段长度
+  validateMetaData({ name, slug, desc });
 
   try {
     // updateMany 限定 type='tag'：metas 表同表装 category/tag，避免按 mid 直更误改同表分类

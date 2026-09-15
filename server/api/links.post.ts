@@ -1,6 +1,6 @@
 import { prisma } from "#server/utils/prisma";
 import { notifyFriendLinkApplication } from "#server/utils/mail";
-import { validateLinkData, setLengthWarnings } from "#server/utils/validation";
+import { validateLinkData } from "#server/utils/validation";
 import { ensureUrlProtocol } from "#server/utils/urlGuard";
 import { fetchPublicUrl } from "#server/utils/safe-fetch";
 import { validateCsrfToken } from "#server/utils/csrf";
@@ -72,12 +72,13 @@ export default defineEventHandler(async event => {
       throw createError({ statusCode: 400, message: "友链地址格式不正确" });
     }
 
-    setLengthWarnings(event, validateLinkData({
+    // 验证字段长度
+    validateLinkData({
       name: body.name,
       link: body.link,
       desc: body.desc,
       avatar: body.avatar,
-    }));
+    });
 
     // 严格校验链接协议：仅允许 http/https，杜绝 javascript:/data: 等存储型 XSS
     try {

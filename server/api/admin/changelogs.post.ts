@@ -1,7 +1,7 @@
 import { prisma } from "#server/utils/prisma";
 import { getUser } from "#server/lib/auth";
 import { validateCsrfToken } from "#server/utils/csrf";
-import { validateChangelogData, setLengthWarnings } from "#server/utils/validation";
+import { validateChangelogData } from "#server/utils/validation";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 import {
   normalizeChangelogEntries,
@@ -26,7 +26,7 @@ export default defineEventHandler(async event => {
   }
   // 前端发来 { content: [{ type, value }, ...] }，规整后校验、入库
   const entries = normalizeChangelogEntries(body?.content);
-  setLengthWarnings(event, validateChangelogData(entries));
+  validateChangelogData(entries);
 
   // PG TEXT 无 65535 字节上限，此处仅保留防单条超大 changelog 的保守护栏（与 import.post 一致）
   const serialized = stringifyChangelogContent(entries);

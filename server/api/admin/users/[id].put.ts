@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "#server/utils/prisma";
 import { getUser } from "#server/lib/auth";
-import { validateUserData, setLengthWarnings } from "#server/utils/validation";
+import { validateUserData } from "#server/utils/validation";
 import { validateCsrfToken } from "#server/utils/csrf";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 
@@ -70,7 +70,8 @@ export default defineEventHandler(async event => {
     throw createError({ statusCode: 400, message: "密码格式错误" });
   }
 
-  setLengthWarnings(event, validateUserData({ name, mail, nickname, avatar }));
+  // 验证字段长度
+  validateUserData({ name, mail, nickname, avatar });
 
   try {
     // 检查用户是否存在

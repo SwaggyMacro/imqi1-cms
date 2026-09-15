@@ -1,6 +1,6 @@
 import { prisma } from "#server/utils/prisma";
 import { getUser } from "#server/lib/auth";
-import { validateSubscribeData, setLengthWarnings } from "#server/utils/validation";
+import { validateSubscribeData } from "#server/utils/validation";
 import { validateCsrfToken } from "#server/utils/csrf";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 
@@ -44,11 +44,12 @@ export default defineEventHandler(async event => {
       throw createError({ statusCode: 400, message: "名称和链接为必填项" });
     }
 
-    setLengthWarnings(event, validateSubscribeData({
+    // 验证字段长度
+    validateSubscribeData({
       name: body.name,
       url: body.url,
       avatar: body.avatar,
-    }));
+    });
 
     const subscribe = await prisma.subscribes.update({
       where: { id: subId },

@@ -1,5 +1,5 @@
 import { prisma } from "#server/utils/prisma";
-import { validateLinkData, setLengthWarnings } from "#server/utils/validation";
+import { validateLinkData } from "#server/utils/validation";
 import { notifyFriendLinkModification } from "#server/utils/mail";
 import { ensureUrlProtocol } from "#server/utils/urlGuard";
 import { validateCsrfToken } from "#server/utils/csrf";
@@ -57,12 +57,13 @@ export default defineEventHandler(async event => {
       });
     }
 
-    setLengthWarnings(event, validateLinkData({
+    // 验证字段长度
+    validateLinkData({
       name,
       link,
       desc,
       avatar,
-    }));
+    });
 
     // 严格校验链接协议：仅允许 http/https，杜绝 javascript:/data: 等存储型 XSS
     try {

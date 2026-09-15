@@ -8,10 +8,10 @@ datasource db {
 
 model attachments {
   aid                Int                  @id @default(autoincrement())
-  type               String
-  title              String
-  url                String
-  storage            String               @default("local")
+  type               String @db.VarChar(191)
+  title              String @db.VarChar(191)
+  url                String @db.VarChar(191)
+  storage            String               @default("local") @db.VarChar(191)
   metadata           Json?
   create_time        DateTime             @default(now())
   contentattachments contentattachments[]
@@ -19,10 +19,10 @@ model attachments {
 
 model metas {
   mid              Int                @id @default(autoincrement())
-  name             String             @unique(map: "Metas_name_key")
-  slug             String?            @unique(map: "Metas_slug_key")
-  desc             String?
-  type             String             @default("category")
+  name             String             @unique(map: "Metas_name_key") @db.VarChar(191)
+  slug             String?            @unique(map: "Metas_slug_key") @db.VarChar(191)
+  desc             String? @db.VarChar(191)
+  type             String             @default("category") @db.VarChar(191)
   contentrelations contentrelations[]
 
   @@index([mid, type], map: "Metas_mid_type_idx")
@@ -55,16 +55,16 @@ model comments {
 
 model links {
   id      Int     @id @default(autoincrement())
-  name    String
-  desc    String?
-  link    String
-  avatar  String?
+  name    String @db.VarChar(191)
+  desc    String? @db.VarChar(191)
+  link    String @db.VarChar(191)
+  avatar  String? @db.VarChar(191)
   enabled Boolean @default(true)
 
   // 友链修改相关字段
   originalLinkId     Int? // 要替换的原始友链ID
   isModification     Boolean @default(false) // 是否为修改请求
-  modificationStatus String? @default("pending") // 修改状态: pending/approved/rejected
+  modificationStatus String? @db.VarChar(191) @default("pending") // 修改状态: pending/approved/rejected
 
   // 关联原友链
   originalLink  links?  @relation("LinkModifications", fields: [originalLinkId], references: [id])
@@ -73,8 +73,8 @@ model links {
 
 model informations {
   id    Int    @id @default(autoincrement())
-  key   String @unique(map: "Informations_key_key")
-  value String
+  key   String @unique(map: "Informations_key_key") @db.VarChar(191)
+  value String @db.VarChar(191)
 }
 
 model contents {
@@ -129,10 +129,10 @@ model contentattachments {
 model sessions {
   id          String   @id
   userId      Int
-  authCode    String
+  authCode    String @db.VarChar(191)
   expires     DateTime
   create_time DateTime @default(now())
-  data        String?
+  data        String? @db.VarChar(191)
 
   @@index([expires], map: "Sessions_expires_idx")
   @@index([userId], map: "Sessions_userId_idx")
@@ -140,9 +140,9 @@ model sessions {
 
 model subscribes {
   id             Int              @id @default(autoincrement())
-  url            String
-  name           String
-  avatar         String?
+  url            String @db.VarChar(191)
+  name           String @db.VarChar(191)
+  avatar         String? @db.VarChar(191)
   lastUpdated    DateTime?
   subscribeposts subscribeposts[]
 }
@@ -164,13 +164,13 @@ model subscribeposts {
 
 model users {
   uid         Int      @id @default(autoincrement())
-  name        String   @unique(map: "Users_name_key")
-  nickname    String?
-  avatar      String?
-  mail        String   @unique(map: "Users_mail_key")
-  password    String
+  name        String   @unique(map: "Users_name_key") @db.VarChar(191)
+  nickname    String? @db.VarChar(191)
+  avatar      String? @db.VarChar(191)
+  mail        String   @unique(map: "Users_mail_key") @db.VarChar(191)
+  password    String @db.VarChar(191)
   create_time DateTime @default(now())
-  auth_code   String?
+  auth_code   String? @db.VarChar(191)
 
   // 两步验证（TOTP）：totp_secret 为 base32 密钥，启用后登录需第二因素
   totp_secret  String?

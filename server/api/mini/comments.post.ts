@@ -1,11 +1,11 @@
 import DOMPurify from "isomorphic-dompurify";
 
-import { siteConfig } from "~~/site.config";
 import type { MiniCommentBody, MiniCommentCreateResponse } from "#server/types/apis/mini";
 import { auditText, getAuditConfig, mapAuditResultToStatus } from "#server/utils/baidu-audit";
 import { getClientIp } from "#server/utils/client-ip";
 import { notifyAdminNewComment, notifyAdminPendingComment, notifyCommentReply } from "#server/utils/mail";
 import { prisma } from "#server/utils/prisma";
+import { getSiteSettings } from "#server/utils/siteSettings";
 import { validateCommentData } from "#server/utils/validation";
 import { invalidateContentCaches } from "#server/utils/content-cache";
 
@@ -27,8 +27,10 @@ const PURIFY_CONFIG = {
 };
 
 export default defineEventHandler(async event => {
-  // 评论功能总开关：关闭时直接拒收（与 comments.get 的空列表行为对应）。
-  if (!siteConfig.features.miniComment) {
+  // 评论总开关跟随主站后台设置（informations.commentEnabled），不再有独立的小程序开关。
+  // 关闭时直接拒收（与 comments.get 的空列表行为对应）。
+  const settings = await getSiteSettings();
+  if (!settings.commentEnabled) {
     throw createError({ statusCode: 403, message: "评论功能已关闭" });
   }
 
@@ -112,13 +114,8 @@ export default defineEventHandler(async event => {
     // 字段长度与格式校验
     validateCommentData({ name, mail, link });
 
-    // 邮箱/链接必填跟随主站设置（commentRequireMail 默认 true、commentRequireLink 默认 false）。
-    const [mailMeta, linkMeta] = await Promise.all([
-      prisma.informations.findUnique({ where: { key: "commentRequireMail" }, select: { value: true } }),
-      prisma.informations.findUnique({ where: { key: "commentRequireLink" }, select: { value: true } }),
-    ]);
-    const requireMail = mailMeta ? mailMeta.value === "true" : true;
-    const requireLink = linkMeta ? linkMeta.value === "true" : false;
+    // 邮箱/链接必填跟随主站设置，与上方总开关同一次读取。
+    const { commentRequireMail: requireMail, commentRequireLink: requireLink } = settings;
 
     if (requireMail && !mail) {
       throw createError({ statusCode: 400, message: "请填写邮箱" });

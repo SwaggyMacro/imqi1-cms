@@ -1,33 +1,27 @@
-import { createHash } from "node:crypto";
-
-import { siteConfig } from "~~/site.config";
 import type { MiniComment, MiniCommentsResponse } from "#server/types/apis/mini";
+import { commentAvatarUrl } from "#server/utils/comment-avatar";
 import { formatRelativeTime } from "#server/utils/mini";
 import { prisma } from "#server/utils/prisma";
+import { getSiteSettings } from "#server/utils/siteSettings";
 
-// 头像直接返回镜像站地址（与主站 footprint 一致），端上 <image> 直连；
+// 头像走共享 util（与主站同一份拼装逻辑），端上 <image> 直连；
 // 需在小程序合法域名白名单里加入所用镜像站域名（gravatar/cravatar/weavatar）。
-const avatarServiceUrls: Record<string, string> = {
-  gravatar: "https://www.gravatar.com/avatar",
-  cravatar: "https://cn.cravatar.com/avatar",
-  weavatar: "https://weavatar.com/avatar",
-};
-
-function avatarUrl(mail: string | null, service: string): string {
-  if (!mail) return "";
-
-  const hash = createHash("md5").update(mail.toLowerCase().trim()).digest("hex");
-  const baseUrl = avatarServiceUrls[service] || avatarServiceUrls.gravatar;
-
-  return `${baseUrl}/${hash}?d=identicon&s=80`;
-}
 
 export default defineEventHandler(async event => {
   setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
 
-  // 评论功能总开关：关闭时返回空列表并标记 commentEnabled=false，端上据此整个评论区（含输入框）不渲染。
-  if (!siteConfig.features.miniComment) {
-    return { success: true, data: [], total: 0, requireMail: true, requireLink: false, commentEnabled: false } satisfies MiniCommentsResponse;
+  // 评论总开关跟随主站后台设置（informations.commentEnabled），不再有独立的小程序开关。
+  // 关闭时返回空列表并标记 commentEnabled=false，端上据此整个评论区（含输入框）不渲染。
+  const settings = await getSiteSettings();
+  if (!settings.commentEnabled) {
+    return {
+      success: true,
+      data: [],
+      total: 0,
+      requireMail: settings.commentRequireMail,
+      requireLink: settings.commentRequireLink,
+      commentEnabled: false,
+    } satisfies MiniCommentsResponse;
   }
 
   const query = getQuery(event);
@@ -41,16 +35,8 @@ export default defineEventHandler(async event => {
   }
 
   try {
-    // 表单必填项跟随主站设置：commentRequireMail 默认 true、commentRequireLink 默认 false；
-    // 头像服务与主站共用一份后台设置（commentAvatarService）。
-    const [mailMeta, linkMeta, avatarMeta] = await Promise.all([
-      prisma.informations.findUnique({ where: { key: "commentRequireMail" }, select: { value: true } }),
-      prisma.informations.findUnique({ where: { key: "commentRequireLink" }, select: { value: true } }),
-      prisma.informations.findUnique({ where: { key: "commentAvatarService" }, select: { value: true } }),
-    ]);
-    const requireMail = mailMeta ? mailMeta.value === "true" : true;
-    const requireLink = linkMeta ? linkMeta.value === "true" : false;
-    const avatarService = avatarMeta?.value || "gravatar";
+    // 表单必填项、头像服务都跟随主站后台设置，与上方总开关同一次读取。
+    const { commentRequireMail: requireMail, commentRequireLink: requireLink, commentAvatarService } = settings;
 
     // 仅取审核通过（status: 1）的评论，按时间正序，端上再自行构建树。
     const rows = await prisma.comments.findMany({
@@ -75,7 +61,7 @@ export default defineEventHandler(async event => {
         id: row.coid,
         name: row.name,
         content: row.content,
-        avatar: avatarUrl(row.mail, avatarService),
+        avatar: commentAvatarUrl(row.mail, commentAvatarService),
         publishedAt: formatRelativeTime(row.create_time),
         created: row.create_time.toISOString(),
         parentName: null,

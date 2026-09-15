@@ -1,4 +1,5 @@
 import type {SiteSettings} from "~/types/composables/setting";
+import {siteConfig} from "~~/site.config";
 
 // 加载状态（模块级，仅客户端有意义）
 const isLoadingSettings = ref(false);
@@ -64,6 +65,9 @@ export function useSiteSettings() {
   const miniQrEnabled = useState<boolean>("site:miniQrEnabled", () => false);
   return {
     siteSettings: computed(() => siteSettings.value),
+    // 站点根地址（不带末尾斜杠）：后台设置优先，为空时回落 site.config.ts。
+    // 读的是 SSR 预取进 useState 的那份，不会额外查库。
+    siteUrl: computed(() => (siteSettings.value?.siteUrl || siteConfig.site.url).replace(/\/+$/, "")),
     buildHash: readonly(buildHash),
     miniQrEnabled: readonly(miniQrEnabled),
     isLoadingSettings: readonly(isLoadingSettings),

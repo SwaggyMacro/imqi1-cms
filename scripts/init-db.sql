@@ -16,13 +16,13 @@
 
 CREATE TABLE IF NOT EXISTS "users" (
   "uid" SERIAL NOT NULL,
-  "name" TEXT NOT NULL,
-  "nickname" TEXT,
-  "avatar" TEXT,
-  "mail" TEXT NOT NULL,
-  "password" TEXT NOT NULL,
+  "name" VARCHAR(191) NOT NULL,
+  "nickname" VARCHAR(191),
+  "avatar" VARCHAR(191),
+  "mail" VARCHAR(191) NOT NULL,
+  "password" VARCHAR(191) NOT NULL,
   "create_time" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "auth_code" TEXT,
+  "auth_code" VARCHAR(191),
   "totp_secret" TEXT,
   "totp_enabled" BOOLEAN NOT NULL DEFAULT false,
   PRIMARY KEY ("uid")
@@ -46,10 +46,10 @@ CREATE INDEX IF NOT EXISTS "TrustedDevices_userId_idx" ON "trusted_devices"("use
 
 CREATE TABLE IF NOT EXISTS "attachments" (
   "aid" SERIAL NOT NULL,
-  "type" TEXT NOT NULL,
-  "title" TEXT NOT NULL,
-  "url" TEXT NOT NULL,
-  "storage" TEXT NOT NULL DEFAULT 'local',
+  "type" VARCHAR(191) NOT NULL,
+  "title" VARCHAR(191) NOT NULL,
+  "url" VARCHAR(191) NOT NULL,
+  "storage" VARCHAR(191) NOT NULL DEFAULT 'local',
   "metadata" JSONB,
   "create_time" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY ("aid")
@@ -57,10 +57,10 @@ CREATE TABLE IF NOT EXISTS "attachments" (
 
 CREATE TABLE IF NOT EXISTS "metas" (
   "mid" SERIAL NOT NULL,
-  "name" TEXT NOT NULL,
-  "slug" TEXT,
-  "desc" TEXT,
-  "type" TEXT NOT NULL DEFAULT 'category',
+  "name" VARCHAR(191) NOT NULL,
+  "slug" VARCHAR(191),
+  "desc" VARCHAR(191),
+  "type" VARCHAR(191) NOT NULL DEFAULT 'category',
   PRIMARY KEY ("mid")
 );
 
@@ -73,22 +73,22 @@ CREATE TABLE IF NOT EXISTS "changelogs" (
 
 CREATE TABLE IF NOT EXISTS "links" (
   "id" SERIAL NOT NULL,
-  "name" TEXT NOT NULL,
-  "desc" TEXT,
-  "link" TEXT NOT NULL,
-  "avatar" TEXT,
+  "name" VARCHAR(191) NOT NULL,
+  "desc" VARCHAR(191),
+  "link" VARCHAR(191) NOT NULL,
+  "avatar" VARCHAR(191),
   "enabled" BOOLEAN NOT NULL DEFAULT true,
   "originalLinkId" INTEGER,
   "isModification" BOOLEAN NOT NULL DEFAULT false,
-  "modificationStatus" TEXT DEFAULT 'pending',
+  "modificationStatus" VARCHAR(191) DEFAULT 'pending',
   PRIMARY KEY ("id"),
   CONSTRAINT "links_originalLinkId_fkey" FOREIGN KEY ("originalLinkId") REFERENCES "links"("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS "informations" (
   "id" SERIAL NOT NULL,
-  "key" TEXT NOT NULL,
-  "value" TEXT NOT NULL,
+  "key" VARCHAR(191) NOT NULL,
+  "value" VARCHAR(191) NOT NULL,
   PRIMARY KEY ("id")
 );
 
@@ -107,9 +107,9 @@ CREATE TABLE IF NOT EXISTS "travels" (
 
 CREATE TABLE IF NOT EXISTS "subscribes" (
   "id" SERIAL NOT NULL,
-  "url" TEXT NOT NULL,
-  "name" TEXT NOT NULL,
-  "avatar" TEXT,
+  "url" VARCHAR(191) NOT NULL,
+  "name" VARCHAR(191) NOT NULL,
+  "avatar" VARCHAR(191),
   "lastUpdated" TIMESTAMP(3),
   PRIMARY KEY ("id")
 );
@@ -183,10 +183,10 @@ CREATE TABLE IF NOT EXISTS "subscribeposts" (
 CREATE TABLE IF NOT EXISTS "sessions" (
   "id" TEXT NOT NULL,
   "userId" INTEGER NOT NULL,
-  "authCode" TEXT NOT NULL,
+  "authCode" VARCHAR(191) NOT NULL,
   "expires" TIMESTAMP(3) NOT NULL,
   "create_time" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "data" TEXT,
+  "data" VARCHAR(191),
   PRIMARY KEY ("id")
 );
 

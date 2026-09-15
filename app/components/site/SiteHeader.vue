@@ -5,10 +5,16 @@ import type {BreadcrumbItem} from "~/types/components/header";
 const route = useRoute();
 
 // 使用全局站点设置
-const { siteSettings } = useSiteSettings();
+const { siteSettings, siteUrl } = useSiteSettings();
 const siteName = computed(() => siteSettings.value?.siteName || siteConfig.site.name);
-// 站点配置的固定域名 host（如 imqi1.com），用于首页胶囊标题的"站点名 - 域名host"
-const siteHost = siteConfig.site.rootDomain;
+// 首页胶囊标题里的域名 host（如 imqi1.com），取后台设置的站点地址，未配置时回落 site.config.ts
+const siteHost = computed(() => {
+  try {
+    return new URL(siteUrl.value).host;
+  } catch {
+    return siteConfig.site.rootDomain;
+  }
+});
 
 // 获取页面标题（从页面组件设置）
 const { getPageTitle, getPageIcon, getPageCategory } = usePageTitle();
@@ -193,7 +199,7 @@ const currentPageTitle = computed(() => {
 
   // 如果是主页，显示"站点名称 - 当前域名host"
   if (route.path === "/") {
-    return `${siteName.value} - ${siteHost}`;
+    return `${siteName.value} - ${siteHost.value}`;
   }
 
   // 其他页面显示"页名称 - 站点名称"

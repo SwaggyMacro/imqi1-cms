@@ -85,11 +85,40 @@ export default defineTypedApiHandler(
       // 避免两端对同一请求推导出不同 IP 导致限流行为分叉。
       const clientIP = getClientIp(event);
 
-      // 获取评论间隔设置
-      const intervalMeta = await prisma.informations.findUnique({
-        where: { key: "commentInterval" },
+      // 评论开关、必填项、层级上限与发布间隔一次取回，避免逐项查库
+      const commentSettingKeys = ["commentEnabled", "commentRequireMail", "commentRequireLink", "commentMaxLevel", "commentInterval"];
+      const commentSettingRows = await prisma.informations.findMany({
+        where: { key: { in: commentSettingKeys } },
+        select: { key: true, value: true },
       });
-      const intervalParsed = intervalMeta ? parseInt(intervalMeta.value, 10) : 60;
+      const commentSettings: Record<string, string> = {};
+      for (const row of commentSettingRows) {
+        commentSettings[row.key] = row.value;
+      }
+
+      // 总开关：后台关掉评论后接口也拒，不依赖前端是否渲染了表单
+      if (commentSettings.commentEnabled === "false") {
+        throw createError({
+          statusCode: 403,
+          message: "评论功能已关闭",
+        });
+      }
+
+      // 必填项与前端表单共用同一份设置，服务端同样要拦
+      if (commentSettings.commentRequireMail === "true" && !mail) {
+        throw createError({
+          statusCode: 400,
+          message: "请填写邮箱",
+        });
+      }
+      if (commentSettings.commentRequireLink === "true" && !link) {
+        throw createError({
+          statusCode: 400,
+          message: "请填写链接",
+        });
+      }
+
+      const intervalParsed = commentSettings.commentInterval ? parseInt(commentSettings.commentInterval, 10) : 60;
       const commentInterval = Number.isFinite(intervalParsed) ? intervalParsed : 60;
 
       if (clientIP && commentInterval > 0) {
@@ -146,12 +175,39 @@ export default defineTypedApiHandler(
       if (parent_id) {
         const parent = await prisma.comments.findFirst({
           where: { coid: parent_id, cid },
-          select: { coid: true },
+          select: { coid: true, parent_id: true },
         });
         if (!parent) {
           throw createError({
             statusCode: 400,
             message: "回复的评论不存在",
+          });
+        }
+
+        /*
+         * 层级上限：根评论是第 1 层（与前端 CommentItem 的 currentLevel 对齐），
+         * 逐级上溯父评论算出本条会落在第几层，超过上限就拒 —— 否则绕过前端
+         * 直接 POST 就能无限嵌套。
+         * 上溯到 maxLevel 层就够判断了，顺带避免脏数据成环时无界循环。
+         */
+        const maxLevelParsed = parseInt(commentSettings.commentMaxLevel ?? "", 10);
+        const maxLevel = Number.isFinite(maxLevelParsed) ? maxLevelParsed : 4;
+
+        let parentLevel = 1;
+        let cursor = parent.parent_id;
+        while (cursor && parentLevel <= maxLevel) {
+          parentLevel++;
+          const ancestor = await prisma.comments.findUnique({
+            where: { coid: cursor },
+            select: { parent_id: true },
+          });
+          cursor = ancestor?.parent_id ?? null;
+        }
+
+        if (maxLevel <= 0 || parentLevel + 1 > maxLevel) {
+          throw createError({
+            statusCode: 400,
+            message: "已达到最大回复层级",
           });
         }
       }

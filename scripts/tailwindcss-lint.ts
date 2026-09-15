@@ -47,7 +47,7 @@ function inlineImports(cssText, baseDir, seen = new Set()) {
 
 async function scanCss(file) {
   const abs = path.resolve(file)
-  let css = inlineImports(fs.readFileSync(abs, 'utf8'), path.dirname(abs))
+  const css = inlineImports(fs.readFileSync(abs, 'utf8'), path.dirname(abs))
   // Tailwind 命中未知 @apply / 非法 theme() 会先向 stderr 打原始堆栈再抛错；静音 stderr，聚焦简洁报告
   const stderrWrite = process.stderr.write
   process.stderr.write = () => true

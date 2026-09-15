@@ -57,7 +57,7 @@ dotenv.config({
 // 因此这里只拿路径,真正选用延后到 resolveFfmpeg() 做实测。
 let ffmpegStaticPath;
 try {
-  // @ts-ignore
+  // @ts-expect-error ffmpeg-static 未提供类型声明，运行时只取路径不调 spawn
   ffmpegStaticPath = (await import("ffmpeg-static")).default;
 } catch {
   ffmpegStaticPath = null;

@@ -73,7 +73,7 @@ export function progressBar(success, failed, total, maxWidth) {
     return fitWide(`${done}/${total}${failed ? ` 失败${failed}` : ''}`, 60)
   }
   const braceW = 2 // ▕ ▏ 两列
-  let barW = maxWidth - strWidth(label) - braceW
+  const barW = maxWidth - strWidth(label) - braceW
   if (barW < 3) {
     // 空间不足，退化为纯标签并裁到宽度内
     return fitWide(label, maxWidth)

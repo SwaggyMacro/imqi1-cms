@@ -1,5 +1,7 @@
 # Memory Index
 
+- [isr 键在 node-server 预设是死键](isr-route-rule-dead-on-node-preset.md) — routeRules 页面缓存只认 cache 对象(配 Redis 才写规则,2026-09-16 修复);裸 isr 只有 Vercel/Netlify 等 serverless preset 认,曾致未配 Redis 时页面完全不缓存且 .nitro/cache 从不生成;未配 Redis 恒存的只有 /api/_nuxt_icon 图标缓存(defineCachedHandler 默认 base:/cache→cache 挂载→fs ./.nitro/cache);要文件缓存降级应写 cache:{maxAge} 或 swr,不要裸 isr
+
 - [后台编辑器自动保存+CSRF防丢](admin-editor-autosave-csrf.md) — useEditorAutosave 统一 Ctrl+S/2s 自动保存/过期防丢；CSRF token 1h 过期(csrf_token maxAge 3600)是长编辑保存 403 主因,根治=每次保存前调 /api/csrf/token 刷新;自动保存仅已有内容(cid),新建手动;401/403→localStorage 备份+提示重登+回编辑页恢复(recoveryKey 用函数随 cid 变);saveContent/savePage 已改 (source)=>SaveResult 控制 toast
 
 - [每次改动跑 lint 三件套](post-change-lint-chain.md) — 用户强原则(2026-09-04):每次代码改动后必跑 `bunx eslint .` + `bunx nuxi typecheck` + `bun run tailwindcss:lint`,三件套并列、不是提交前才跑;tailwindcss:lint 与 eslint/typecheck 一组

@@ -40,8 +40,9 @@ const nitroIgnore = siteConfig.features.miniApi ? [] : ["api/mini/**"];
 // 仅生产生效；供 nitro ISR 存储与 server 缓存共用）
 const redisConfig = getRedisConfig();
 
-// ISR 全局缓存 TTL：统一 30 分钟（routeRules 各路由的 isr 与 cache.maxAge 共用这一值）。
+// 页面缓存全局 TTL：统一 30 分钟（routeRules 各路由的 isr 与 cache.maxAge 共用这一值）。
 // 旧配置曾按路由区分（1h / 12h / 10min / 永久），现已全部统一；后续调整缓存时长只改这里。
+// 仅在配置了 Redis 时生效（见下方 routeRules），未配置 Redis 时页面不做整页缓存。
 const ISR_CACHE_SECONDS = 60 * 30;
 
 export default defineNuxtConfig({
@@ -506,7 +507,8 @@ export default defineNuxtConfig({
       openAPI: false,
     },
 
-    // ISR 缓存存储配置
+    // 缓存存储配置：cache 挂载在未配 Redis 时是 ./.nitro/cache 文件缓存，
+    // 恒定服务 /api/_nuxt_icon 的图标缓存；配置了 Redis 时页面整页缓存（routeRules.cache）走 redis 挂载。
 
     storage: {
       redis: redisConfig
@@ -588,248 +590,65 @@ export default defineNuxtConfig({
           },
         }
       : {}),
-    // ========== ISR（增量静态再生成）配置 ==========
-    // 注意：ISR在开发环境可能不稳定，建议生产环境启用
-    ...(isProduction
+    // ========== 内容页整页缓存 ==========
+    // 各内容页路由的整页缓存统一为 ISR_CACHE_SECONDS（30 分钟）：改动内容最迟 30 分钟内全站可见。
+    // 仅在配置了 Redis 时启用，缓存经 routeRules.cache 落 Redis（base: "redis"）；
+    // 未配置 Redis 时不写任何规则，页面每次请求实时 SSR、不做整页缓存。
+    // ⚠️ 不要指望用 isr 键做「没 Redis 就退回文件缓存」的降级：node-server 预设根本
+    // 不消费 isr（只有 Vercel/Netlify 等 serverless preset 认它），Nitro 运行时只按
+    // routeRules.cache 包装 cachedEventHandler，没有 cache 对象就没有缓存，isr 只是
+    // 烘焙进产物的死键。站内恒存在的文件缓存只有 /api/_nuxt_icon 的图标缓存
+    // （defineCachedHandler 默认落 cache 存储，未配 Redis 时即下方 cache 挂载的
+    // ./.nitro/cache 文件缓存）。内容变更后的即时失效见 server/utils/content-cache.ts
+    // （按 nitro:routes 键组 SCAN+UNLINK）。
+    //（redisConfig 在 getRedisConfig 里已限定仅生产返回，故不再需要 isProduction 判断；
+    //  下方规则里的 isr 键是历史写法，对 node-server 不生效，生效的是 cache 对象。）
+    ...(redisConfig
       ? {
-          // 各路由缓存统一为 ISR_CACHE_SECONDS（30 分钟）：改动内容最迟 30 分钟内全站可见。
           // 首页
-          "/": {
-            isr: ISR_CACHE_SECONDS,
-            // 显式指定使用 Redis 缓存存储（如果配置了 Redis）
-            ...(redisConfig
-              ? {
-                  cache: {
-                    maxAge: ISR_CACHE_SECONDS,
-                    base: "redis",
-                  },
-                }
-              : {}),
-          },
+          "/": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 文章归档
-          "/archiving": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/archiving": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 分类页
-          "/category/**": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/category/**": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 文章详情（原"完全静态/永久缓存"，统一为30分钟：新发布文章最迟30分钟内可见）
-          "/content/**": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/content/**": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 标签页
-          "/tag/**": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/tag/**": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 订阅页
-          "/subscribes": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/subscribes": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 更新日志
-          "/changelogs": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/changelogs": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 协议页面（原"完全静态"，统一为30分钟）
-          "/agreement": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/agreement": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 站点地图
-          "/sitemap": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
-          "/sitemap.xml": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/sitemap": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
+          "/sitemap.xml": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 关于页
-          "/about": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/about": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 旅行地图
-          "/map": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/map": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 友链页
-          "/links": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/links": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 留言板
-          "/messages": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/messages": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
 
           // 搜索页
-          "/search": {
-            isr: ISR_CACHE_SECONDS,
-            ...(redisConfig
-              ? {
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                }
-              : {}),
-          },
+          "/search": { isr: ISR_CACHE_SECONDS, cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" } },
         }
-      : {
-          // 开发环境：如果配置了Redis则启用ISR，否则使用普通SSR
-          ...(redisConfig
-            ? {
-                // 有Redis时启用ISR（统一30分钟，与生产一致）
-                "/": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/archiving": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/category/**": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/content/**": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/tag/**": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/subscribes": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/changelogs": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/agreement": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/sitemap": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/sitemap.xml": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/about": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/map": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/links": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/messages": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-                "/search": {
-                  isr: ISR_CACHE_SECONDS,
-                  cache: { maxAge: ISR_CACHE_SECONDS, base: "redis" },
-                },
-              }
-            : {
-                // 没有Redis时禁用ISR，使用普通SSR
-                "/": { isr: false },
-                "/archiving": { isr: false },
-                "/category/**": { isr: false },
-                "/content/**": { isr: false },
-                "/tag/**": { isr: false },
-                "/subscribes": { isr: false },
-                "/changelogs": { isr: false },
-                "/agreement": { isr: false },
-                "/sitemap": { isr: false },
-                "/sitemap.xml": { isr: false },
-                "/about": { isr: false },
-                "/map": { isr: false },
-                "/links": { isr: false },
-                "/messages": { isr: false },
-                "/search": { isr: false },
-              }),
-        }),
+      : {}),
 
     // ========== SSR配置 ==========
     // 登录页面禁用 SSR，避免 hydration 不匹配

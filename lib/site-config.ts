@@ -66,7 +66,7 @@ export interface SiteBuildConfig {
  * `runtimeConfig.redis` 的搜索缓存，见 `shared/redis-config.ts`）。**仅生产构建生效**。
  */
 export interface RedisBuildConfig {
-  /** 是否启用 Redis。置 false（或 host 为空）时不报错降级：ISR 退回文件系统缓存、搜索缓存关闭 */
+  /** 是否启用 Redis。置 false（或 host 为空）时不报错降级：页面整页缓存与搜索缓存一并关闭（页面实时 SSR） */
   enabled: boolean;
   /** Redis 主机。本机部署填 127.0.0.1；Docker 部署由构建参数覆盖，改这里对 Docker 无效 */
   host: string;

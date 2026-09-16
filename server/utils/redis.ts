@@ -7,8 +7,8 @@ import type { RedisConfig } from "#shared/redis-config";
 // 见 shared/redis-config.ts），仅生产生效、开发环境恒不启用，运行时不读 REDIS_* 环境变量
 //（但 NUXT_REDIS_* / NITRO_REDIS_* 仍能覆盖烘焙值，见 docker/README.md「运行时覆盖」）；
 // 未配置时 runtimeConfig.redis 已被 nuxt.config 兜成 host 为空的零对象，
-// 这里以 redisConfig.host 为空判定为关闭，搜索缓存自动关闭（ISR 缓存由
-// nitro storage/routeRules 决定，未配置时同样降级到文件系统）。
+// 这里以 redisConfig.host 为空判定为关闭，搜索缓存自动关闭（页面整页缓存由
+// nitro storage/routeRules 决定，未配置 Redis 时不启用）。
 const redisConfig = useRuntimeConfig().redis as RedisConfig | null | undefined;
 
 export const redis = redisConfig?.host

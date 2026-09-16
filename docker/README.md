@@ -5,7 +5,7 @@
 | 版本 | 文件 | 服务 | 说明 |
 | --- | --- | --- | --- |
 | **带 Redis** | `docker-compose.yml` + `Dockerfile` | 应用 + PostgreSQL 16 + Redis 7 | 构建期烘焙 `redis:6379`（compose 服务名）并启动 redis 容器，ISR 增量缓存与搜索缓存共用；redis 数据存于 `redis-data` 卷 |
-| **不带 Redis** | `docker-compose.noredis.yml` + `Dockerfile.noredis` | 应用 + PostgreSQL 16 | 构建期显式关闭 Redis：ISR 走文件系统缓存、搜索缓存关闭，无 redis 容器/卷 |
+| **不带 Redis** | `docker-compose.noredis.yml` + `Dockerfile.noredis` | 应用 + PostgreSQL 16 | 构建期显式关闭 Redis：页面不做整页缓存、搜索缓存关闭，无 redis 容器/卷 |
 
 > **`site.config.ts` 的 `build.redis` 在 Docker 部署下不生效**，它只对**裸机部署**负责。两个 Dockerfile 总会把 `REDIS_ENABLED` / `REDIS_HOST` 等设进构建环境，而 [shared/redis-config.ts](../shared/redis-config.ts) 的取值是 `环境变量 ?? site.config`——环境变量一旦有值，`site.config` 就永远不被查。所以把 `build.redis.enabled` 改成 `false` 并不能关掉 Docker 里的 Redis；Docker 这边唯一的开关就是选哪套 compose。
 
@@ -63,7 +63,7 @@ docker compose --env-file .env -f docker/docker-compose.yml up -d --build
 docker compose --env-file .env -f docker/docker-compose.noredis.yml up -d --build
 ```
 
-- 构建期烘焙 `REDIS_ENABLED=false` → `getRedisConfig()` 返回 null，ISR 走文件系统缓存、搜索缓存关闭；
+- 构建期烘焙 `REDIS_ENABLED=false` → `getRedisConfig()` 返回 null，页面整页缓存与搜索缓存关闭；
 - 不创建 redis 容器、不创建 `redis-data` 卷。
 - 这个开关不能省：`site.config.ts` 的 `build.redis.enabled` 默认为 `true`，不显式关掉的话容器会去连 `host` 默认值 `127.0.0.1`（即容器自己），一直连不上。
 

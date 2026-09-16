@@ -27,7 +27,7 @@
 
 ImQi1 CMS 是一套基于 **Nuxt 4 + Prisma + TailwindCSS** 构建的全栈个人博客与内容管理系统，也是个人站点 [imqi1.com](https://imqi1.com) 的完整源码。它并非通用型 CMS 模板，而是围绕「做技术的分享者、生活的摄影师、时事的评论员」这一定位打磨的一站式内容平台，覆盖从内容创作、发布、管理到多端展示的完整链路。
 
-项目采用 **SSR + ISR（增量静态再生成）** 架构：页面在服务端渲染以保证首屏与 SEO，同时借助 Redis（未配置时 ISR 自动降级到文件系统、搜索缓存关闭）缓存渲染结果，兼顾性能与实时性——所有 ISR 路由统一 **30 分钟过期**（时长由 `nuxt.config.ts` 的 `ISR_CACHE_SECONDS` 常量统一控制，改动内容最迟 30 分钟内在全站可见）。数据层使用 Prisma 7 搭配 PostgreSQL 适配器直连 PG，前后端类型则通过 Nuxt 的 `InternalApi` 自动推断，无需额外的类型生成器。
+项目采用 **SSR + ISR（增量静态再生成）** 架构：页面在服务端渲染以保证首屏与 SEO，同时借助 Redis 缓存渲染结果（未配置 Redis 时页面不做整页缓存、每次实时渲染，搜索缓存关闭），兼顾性能与实时性——ISR 路由统一 **30 分钟过期**（时长由 `nuxt.config.ts` 的 `ISR_CACHE_SECONDS` 常量统一控制，改动内容最迟 30 分钟内在全站可见）。数据层使用 Prisma 7 搭配 PostgreSQL 适配器直连 PG，前后端类型则通过 Nuxt 的 `InternalApi` 自动推断，无需额外的类型生成器。
 
 除了 Web 主站，仓库还以 Git 子模块的形式包含了一个基于 **uni-app** 的小程序端（`mini/`），支持 H5 / 微信小程序 / 支付宝小程序三端，并复用主站提供的专用 API。
 
@@ -212,7 +212,7 @@ build: {
 },
 ```
 
-`nuxt build` 打包时读取并烘焙进服务端产物，ISR 增量缓存与搜索缓存共用同一组值，**改动后需重新打包**；**生产服务器运行环境不要再设置任何 Redis 环境变量**（`NUXT_REDIS_*` 之类）。**开发环境恒不启用 Redis**（本地走普通 SSR、搜索缓存关闭），无需配置。未启用（`enabled: false` 或 `host` 为空）时 ISR 自动降级到文件系统缓存、搜索缓存关闭，均不报错。
+`nuxt build` 打包时读取并烘焙进服务端产物，ISR 增量缓存与搜索缓存共用同一组值，**改动后需重新打包**；**生产服务器运行环境不要再设置任何 Redis 环境变量**（`NUXT_REDIS_*` 之类）。**开发环境恒不启用 Redis**（本地走普通 SSR、搜索缓存关闭），无需配置。未启用（`enabled: false` 或 `host` 为空）时页面整页缓存与搜索缓存一并关闭，均不报错。
 
 > Docker 部署不用改 `site.config.ts`：选哪套 compose 文件即决定是否启用，参数在构建命令里覆盖，见下方「[使用 Docker 部署](#使用-docker-部署)」。
 
@@ -404,7 +404,7 @@ bun run restart:server -- start # 启动
 Docker 部署文件已整理进 `docker/` 子目录，提供**两套独立版本**按是否需要 Redis 二选一：
 
 - **带 Redis**（`docker/docker-compose.yml` + `docker/Dockerfile`）：应用 + PostgreSQL 16 + Redis 7。默认烘焙 `redis:6379`（compose 服务名）并启动 redis 容器，ISR 增量缓存与搜索缓存共用。
-- **不带 Redis**（`docker/docker-compose.noredis.yml` + `docker/Dockerfile.noredis`）：仅应用 + PostgreSQL 16。ISR 走文件系统缓存、搜索缓存关闭，不创建 redis 容器/卷。
+- **不带 Redis**（`docker/docker-compose.noredis.yml` + `docker/Dockerfile.noredis`）：仅应用 + PostgreSQL 16。页面不做整页缓存、搜索缓存关闭，不创建 redis 容器/卷。
 
 **是否启用 Redis 只由「选哪套 compose 文件」决定**：compose 的 `build.args` 是固定字面量，不读环境变量，所以 `.env` 里不需要也不应该写 `REDIS_*`（也不需要任何 `COMPOSE_PROFILES` 之类的环境变量魔法）。要指定连哪台 Redis、端口、DB 号，在**构建命令里用 `--build-arg` 覆盖**，例如 `--build-arg REDIS_HOST=10.0.0.5`（可用变量：`REDIS_ENABLED` / `REDIS_HOST` / `REDIS_PORT` / `REDIS_DB`；默认部署的 redis 只在 compose 内网可达、未开鉴权，故**不支持密码**——原因与自行加密码的做法见 [`docker/README.md`](docker/README.md) 的「指定 Redis 参数」）。两个版本的具体用法、启动命令与运维命令见 **[`docker/README.md`](docker/README.md)**。
 

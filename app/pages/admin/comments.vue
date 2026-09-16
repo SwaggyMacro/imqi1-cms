@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { CsrfResponse } from "~/types/apis/admin/categories";
 import type { CommentItem, CommentListResponse } from "~/types/apis/admin/comments";
-import { parseUserAgent } from "~/utils/parseUserAgent";
+import { parseUserAgent } from "#shared/parseUserAgent";
 
 const route = useRoute();
 const router = useRouter();

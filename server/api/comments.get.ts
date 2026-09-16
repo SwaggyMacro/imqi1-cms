@@ -1,6 +1,6 @@
 import { prisma } from "#server/utils/prisma";
 import { getIpLocation } from "#server/utils/qqwry";
-import { parseUserAgent } from "#server/utils/parseUserAgent";
+import { parseUserAgent } from "#shared/parseUserAgent";
 import type { CommentNode } from "#server/types/apis/comment-node";
 
 export default defineEventHandler(async event => {

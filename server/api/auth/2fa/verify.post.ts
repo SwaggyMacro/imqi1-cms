@@ -4,6 +4,7 @@ import { setSession } from "#server/lib/auth";
 import { getClientIp } from "#server/utils/client-ip";
 import { prisma } from "#server/utils/prisma";
 import { verifyTOTP } from "#server/utils/totp";
+import { resolveTrustedDeviceName } from "#server/utils/trusted-device-name";
 import {
   checkLoginRateLimit,
   recordLoginFailure,
@@ -72,13 +73,12 @@ export default defineEventHandler(async event => {
   if (rememberDevice) {
     // 把「信任此设备」记录到库，cookie 只存 deviceId（DB 为准，可后台撤回/过期）
     const deviceId = generateDeviceId();
-    // 设备名取登录表单的自定义名称（可选）；未填则 null → 后台显示「未知设备」
-    const customName =
-      typeof rawDeviceName === "string" ? rawDeviceName.trim().slice(0, 100) : "";
+    // 未填写自定义名称时，使用请求 UA 识别出的浏览器名称。
+    const deviceName = resolveTrustedDeviceName(rawDeviceName, getHeader(event, "user-agent") || "");
     await createTrustedDevice({
       userId: user.uid,
       deviceId,
-      name: customName || null,
+      name: deviceName,
       ip,
     });
     setCookie(event, TRUSTED_DEVICE_COOKIE, deviceId, {

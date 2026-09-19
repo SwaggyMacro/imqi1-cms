@@ -380,19 +380,92 @@ onMounted(() => {
       </form>
     </Card>
 
-    <!-- 加载状态 / 错误态 -->
-    <Card v-else class="p-12">
-      <div v-if="loadError" class="flex flex-col items-center justify-center gap-4 text-center">
+    <!-- 加载状态：预览账户资料、表单和安全设置的页面结构，避免只显示居中的 loading 图标。 -->
+    <div
+      v-else-if="loading"
+      data-testid="account-settings-skeleton"
+      aria-busy="true"
+      aria-label="正在加载账户设置"
+      class="space-y-6"
+    >
+      <Card class="p-6 sm:p-8">
+        <div class="flex items-center gap-6">
+          <div class="size-20 shrink-0 rounded-full bg-muted animate-pulse" />
+          <div class="w-full max-w-xs space-y-3">
+            <div class="h-6 w-36 rounded bg-muted animate-pulse" />
+            <div class="h-4 w-24 rounded bg-muted animate-pulse" />
+            <div class="h-4 w-48 rounded bg-muted animate-pulse" />
+          </div>
+        </div>
+
+        <Separator class="my-6" />
+
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div v-for="i in 4" :key="`account-field-skeleton-${i}`" class="space-y-2">
+            <div class="h-4 w-20 rounded bg-muted animate-pulse" />
+            <div class="h-10 w-full rounded-md bg-muted animate-pulse" />
+            <div v-if="i === 2 || i === 4" class="h-3 w-32 rounded bg-muted animate-pulse" />
+          </div>
+        </div>
+
+        <div class="mt-6 space-y-2">
+          <div class="h-4 w-16 rounded bg-muted animate-pulse" />
+          <div class="h-10 w-full rounded-md bg-muted animate-pulse" />
+          <div class="h-3 w-56 rounded bg-muted animate-pulse" />
+        </div>
+
+        <Separator class="my-6" />
+
+        <div class="flex justify-end">
+          <div class="h-10 w-20 rounded-md bg-muted animate-pulse" />
+        </div>
+      </Card>
+
+      <Card class="p-6 sm:p-8">
+        <div class="flex items-center gap-3">
+          <div class="size-5 rounded bg-muted animate-pulse" />
+          <div class="space-y-2">
+            <div class="h-5 w-24 rounded bg-muted animate-pulse" />
+            <div class="h-4 w-64 max-w-full rounded bg-muted animate-pulse" />
+          </div>
+        </div>
+        <Separator class="my-4" />
+        <div class="space-y-3">
+          <div class="h-4 w-3/4 max-w-lg rounded bg-muted animate-pulse" />
+          <div class="h-10 w-full max-w-sm rounded-md bg-muted animate-pulse" />
+        </div>
+      </Card>
+
+      <Card class="p-6 sm:p-8">
+        <div class="flex items-center gap-3">
+          <div class="size-5 rounded bg-muted animate-pulse" />
+          <div class="space-y-2">
+            <div class="h-5 w-28 rounded bg-muted animate-pulse" />
+            <div class="h-4 w-72 max-w-full rounded bg-muted animate-pulse" />
+          </div>
+        </div>
+        <Separator class="my-4" />
+        <div class="space-y-3">
+          <div v-for="i in 2" :key="`trusted-device-skeleton-${i}`" class="flex items-center justify-between gap-4 rounded-md border p-3">
+            <div class="min-w-0 flex-1 space-y-2">
+              <div class="h-4 w-32 rounded bg-muted animate-pulse" />
+              <div class="h-3 w-4/5 rounded bg-muted animate-pulse" />
+            </div>
+            <div class="h-9 w-16 shrink-0 rounded-md bg-muted animate-pulse" />
+          </div>
+        </div>
+      </Card>
+    </div>
+
+    <!-- 错误态 -->
+    <Card v-else-if="loadError" class="p-12">
+      <div class="flex flex-col items-center justify-center gap-4 text-center">
         <Icon name="lucide:circle-alert" class="size-8 text-destructive" />
         <p class="text-muted-foreground">{{ loadError }}</p>
         <Button variant="outline" @click="fetchUser">
           <Icon name="lucide:refresh-cw" class="mr-2 size-4" />
           重试
         </Button>
-      </div>
-      <div v-else class="flex flex-col items-center justify-center gap-4">
-        <div class="size-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-        <p class="text-muted-foreground">加载中...</p>
       </div>
     </Card>
 

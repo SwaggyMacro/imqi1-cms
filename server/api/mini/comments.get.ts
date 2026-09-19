@@ -1,3 +1,4 @@
+import { siteConfig } from "~~/site.config";
 import type { MiniComment, MiniCommentsResponse } from "#server/types/apis/mini";
 import { commentAvatarUrl } from "#server/utils/comment-avatar";
 import { formatRelativeTime } from "#server/utils/mini";
@@ -10,19 +11,19 @@ import { getSiteSettings } from "#server/utils/siteSettings";
 export default defineEventHandler(async event => {
   setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
 
-  // 评论总开关跟随主站后台设置（informations.commentEnabled），不再有独立的小程序开关。
-  // 关闭时返回空列表并标记 commentEnabled=false，端上据此整个评论区（含输入框）不渲染。
-  const settings = await getSiteSettings();
-  if (!settings.commentEnabled) {
+  // 小程序评论使用独立的构建期开关，不跟随主站后台评论开关。
+  if (!siteConfig.features.miniComment) {
     return {
       success: true,
       data: [],
       total: 0,
-      requireMail: settings.commentRequireMail,
-      requireLink: settings.commentRequireLink,
+      requireMail: true,
+      requireLink: false,
       commentEnabled: false,
     } satisfies MiniCommentsResponse;
   }
+
+  const settings = await getSiteSettings();
 
   const query = getQuery(event);
   const cid = Number(query.cid);

@@ -1,5 +1,6 @@
 import DOMPurify from "isomorphic-dompurify";
 
+import { siteConfig } from "~~/site.config";
 import type { MiniCommentBody, MiniCommentCreateResponse } from "#server/types/apis/mini";
 import { auditText, getAuditConfig, mapAuditResultToStatus } from "#server/utils/baidu-audit";
 import { getClientIp } from "#server/utils/client-ip";
@@ -27,12 +28,12 @@ const PURIFY_CONFIG = {
 };
 
 export default defineEventHandler(async event => {
-  // 评论总开关跟随主站后台设置（informations.commentEnabled），不再有独立的小程序开关。
-  // 关闭时直接拒收（与 comments.get 的空列表行为对应）。
-  const settings = await getSiteSettings();
-  if (!settings.commentEnabled) {
+  // 小程序评论使用独立的构建期开关，不跟随主站后台评论开关。
+  if (!siteConfig.features.miniComment) {
     throw createError({ statusCode: 403, message: "评论功能已关闭" });
   }
+
+  const settings = await getSiteSettings();
 
   try {
     const body = await readBody<MiniCommentBody>(event);

@@ -1,15 +1,14 @@
 import type { MiniMessagesConfigResponse } from "#server/types/apis/mini";
 import { prisma } from "#server/utils/prisma";
-import { getSiteSettings } from "#server/utils/siteSettings";
+import { siteConfig } from "~~/site.config";
 
 // 留言板即绑定到某篇文章的评论区，与主站 /api/messages/config 逻辑一致：
 // 优先取 informations.messageContentId，否则回退到 slug 为 "messages" 的文章。
-// 同时返回评论总开关（跟随主站后台设置），关闭时留言页与入口都不展示。
+// 同时返回小程序评论开关，关闭时留言页与入口都不展示。
 export default defineEventHandler(async event => {
   setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
 
-  // 评论总开关跟随主站后台设置，与 comments.get / comments.post 同一份来源
-  const { commentEnabled } = await getSiteSettings();
+  const commentEnabled = siteConfig.features.miniComment;
 
   try {
     const messageContentIdMeta = await prisma.informations.findUnique({

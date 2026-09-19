@@ -21,6 +21,7 @@
 - [async composable 内部 await 丢实例](async-composable-loses-nuxt-instance.md) — async composable 体内 await 后再调 use* 会报 "composable called outside...setup";返回 Promise 给页面顶层 await,或把同步 composable 调用挪到 await 之前
 - [滚动监听首帧须延后到 onMounted](scroll-listener-hydration-onmounted.md) — 读 window.scrollY 写 isScrolled/进度等状态的 composable,首次同步执行须在 onMounted(水合后),setup 同步赋值在 scroll restoration 下触发 hydration class mismatch;addEventListener/订阅可 setup 同步做但首次回调放 onMounted
 - [小程序实况照片点击播放](mini-live-photo-click-play.md) — mini 端 Motion Photo:拉整包扫 ftyp 切 MP4,<video> 覆盖静态图点击播放;视频段 H5 用 blob/小程序 writeFile 临时文件,用 IS_H5+运行时 if 分流(勿双 return);#live 锚点标 ImageBlock.isLive
+- [小程序评论独立开关](mini-comment-feature-switch.md) — `site.config.ts` 的 `features.miniComment` 是构建期开关,独立于后台 `commentEnabled`;false 时 comments.get 返回空列表、comments.post 返回 403、messages-config 返回 `commentEnabled:false`;`miniApi` 只控制小程序 API 是否打包
 - [Prisma 关系键重命名坑](prisma-relation-key-rename-trap.md) — 批量改标识符时 Prisma where/orderBy 的关系键(join 模型上是单数 content,非 contents)会被误改,vue-tsc/build 全绿也抓不到,只运行时 500;改完必须启 dev 逐个 curl API(尤其 category/tag/mini/footprint/travels)
 - [公开接口显式白名单字段](public-api-explicit-field-whitelist.md) — 用户强原则:前台不漏任何非必要字段(隐私+内部审核字段都算泄露);公开接口 findMany 必带 select 或响应节点逐字段构造,禁 ...row;已修 comments.get/links.get,范式见 mini/*;必 curl grep 验
 - [Admin 写接口必须 CSRF](admin-write-api-csrf-required.md) — /api/admin/* POST/PUT/DELETE 必带 validateCsrfToken;POST/PUT 从 body csrfToken、DELETE 从 header x-csrf-token;referer-check 非替代(开发环境跳过);tags CRUD 曾整体漏(2026-07-16 修),新增写接口别漏

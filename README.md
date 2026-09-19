@@ -586,7 +586,7 @@ const _cdnUrl = "https://cdn.imqi1.com"; // CDN 根地址（未用 CDN 可与站
 | | `pages.homeLinks` | 首页联系 / 入口图标条（名称、图标、链接或二维码）。 |
 | | `pages.aboutLinks` | 关于页「交个朋友」区的外链（邮箱 / 个人网站 / GitHub）。 |
 | | `pages.links` | 友链页的博客组织入口（`blogOrganizations`）与本站资料（`profile`，供他人添加友链）。 |
-| 功能 | `features.miniApi` | 是否启用小程序服务端 API（`server/api/mini`）；关闭后不注册这些路由。小程序评论不再有独立开关，跟随后台的「开启评论」。 |
+| 功能 | `features.miniApi` / `features.miniComment` | 是否启用小程序服务端 API（`server/api/mini`）和小程序评论；关闭 `miniApi` 后不注册这些路由，关闭 `miniComment` 后小程序不展示评论区且接口拒绝评论请求。 |
 | | `features.mobileQr` / `features.miniQr` | 文章页「本文可在【手机】上看」「【小程序】上看」入口开关。 |
 | | `features.amap` | 高德地图：`proxy` 生产是否走服务端 nitro 代理路由 `/_AMapService`（开发恒直连）、`entry` 是否展示地图入口胶囊。地图能否加载由运行时判断，key / securityCode 运行时从环境变量读取（不打包进产物），生产代理模式下浏览器不持 key。 |
 

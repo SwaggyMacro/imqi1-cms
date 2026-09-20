@@ -398,9 +398,9 @@ onMounted(async () => {
                 </div>
               </NuxtLink>
 
-              <!-- 操作遮罩 -->
+              <!-- 操作遮罩：触屏（hover:none）常显，能 hover 的设备上悬停才浮现 -->
               <div
-                class="absolute inset-0 top-[calc(100%-60px)] bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center gap-2 pb-2">
+                class="absolute inset-0 top-[calc(100%-60px)] bg-linear-to-t from-black/60 to-transparent opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity flex items-end justify-center gap-2 pb-2">
                 <Button variant="secondary" size="sm" class="h-8" title="复制链接" @click.stop="copyLink(item.url)">
                   <Icon name="lucide:copy" class="size-4" />
                 </Button>

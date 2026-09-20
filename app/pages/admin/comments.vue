@@ -615,6 +615,13 @@ onMounted(() => {
 
         <!-- 数据列表 - 网格布局 -->
         <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- 全选和批量操作 -->
+          <div v-if="comments.length > 0" class="lg:col-span-2 flex items-center gap-2 pb-2 border-b">
+            <Checkbox :model-value="isAllSelected" :indeterminate="isIndeterminate" @update:model-value="toggleSelectAll" />
+            <span class="text-sm text-muted-foreground">全选</span>
+            <span v-if="selectedIds.length > 0" class="ml-auto text-sm text-muted-foreground"> 已选 {{ selectedIds.length }} 项 </span>
+          </div>
+
           <div
             v-for="comment in comments"
             :key="comment.coid"
@@ -668,6 +675,10 @@ onMounted(() => {
                     <Icon name="lucide:pencil" class="mr-2 size-4" />
                     编辑
                   </DropdownMenuItem>
+                  <DropdownMenuItem @click="openFrontendComment(comment)">
+                    <Icon name="lucide:external-link" class="mr-2 size-4" />
+                    查看前台评论
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel>设置状态</DropdownMenuLabel>
                   <DropdownMenuItem v-for="option in statusOptions" :key="option.value" @click="setStatus(comment.coid, option.value)">
@@ -715,6 +726,13 @@ onMounted(() => {
 
         <!-- 移动端数据列表 -->
         <div v-else-if="comments.length > 0" class="space-y-3 sm:space-y-4">
+          <!-- 全选和批量操作 -->
+          <div class="flex items-center gap-2 pb-2 border-b">
+            <Checkbox :model-value="isAllSelected" :indeterminate="isIndeterminate" @update:model-value="toggleSelectAll" />
+            <span class="text-sm text-muted-foreground">全选</span>
+            <span v-if="selectedIds.length > 0" class="ml-auto text-sm text-muted-foreground"> 已选 {{ selectedIds.length }} 项 </span>
+          </div>
+
           <div
             v-for="comment in comments"
             :key="comment.coid"
@@ -767,6 +785,10 @@ onMounted(() => {
                   <DropdownMenuItem @click="openEditDialog(comment)">
                     <Icon name="lucide:pencil" class="mr-2 size-4" />
                     编辑
+                  </DropdownMenuItem>
+                  <DropdownMenuItem @click="openFrontendComment(comment)">
+                    <Icon name="lucide:external-link" class="mr-2 size-4" />
+                    查看前台评论
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuLabel>设置状态</DropdownMenuLabel>

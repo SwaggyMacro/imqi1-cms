@@ -553,10 +553,24 @@ onMounted(() => {
 
       <!-- 数据列表 - 移动端卡片 -->
       <div v-else class="min-[1175px]:hidden space-y-4">
-        <div v-for="content in contents" :key="content.cid" class="border rounded-lg p-4 space-y-3">
-          <div>
-            <h3 class="font-medium text-base">{{ content.title }}</h3>
-            <p class="text-sm text-muted-foreground font-mono mt-1">{{ content.slug || "-" }}</p>
+        <!-- 全选和批量操作 -->
+        <div v-if="contents.length > 0" class="flex items-center gap-2 pb-2 border-b">
+          <Checkbox :model-value="isAllSelected" :indeterminate="isIndeterminate" @update:model-value="toggleSelectAll" />
+          <span class="text-sm text-muted-foreground">全选</span>
+          <span v-if="selectedIds.length > 0" class="ml-auto text-sm text-muted-foreground"> 已选 {{ selectedIds.length }} 项 </span>
+        </div>
+
+        <div
+          v-for="content in contents"
+          :key="content.cid"
+          class="border rounded-lg p-4 space-y-3 transition-colors"
+          :class="{ 'bg-muted/50 border-primary': selectedIds.includes(content.cid) }">
+          <div class="flex items-start gap-3">
+            <Checkbox :model-value="selectedIds.includes(content.cid)" class="mt-1" @update:model-value="toggleSelect(content.cid)" />
+            <div class="flex-1 min-w-0">
+              <h3 class="font-medium text-base">{{ content.title }}</h3>
+              <p class="text-sm text-muted-foreground font-mono mt-1">{{ content.slug || "-" }}</p>
+            </div>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">

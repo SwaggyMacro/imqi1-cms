@@ -15,7 +15,9 @@ import { assertPublicHttpUrl, isPrivateIp } from "#server/utils/urlGuard";
  *
  * 本封装用 undici 自定义 dispatcher 把连接**钉定到已校验的公网 IP**：`resolvePublicIps` 解析并过滤，
  * 随后 `Agent.connect.lookup` 固定返回这些 IP，fetch 不再对主机名做二次解析，从而封掉该窗口。
- * 同时统一 `redirect:"error"`、可配 timeout，落地即覆盖 rss.ts / check-link.get.ts / links.post.ts 三个消费方
+ * 重定向走 `redirect:"manual"`，每跳重新 SSRF 校验 + 重新钉 IP（既允许 www / 协议 / 尾斜杠等
+ * 规范化跳转，又不让 30x 把请求引到内网/云元数据）；统一 timeout，落地即覆盖
+ * rss.ts / check-link.get.ts / links.post.ts 三个消费方
  * （对照 .claude/memory/ssrf-ipv6-urlguard.md 的「共用同一 fetch 封装」建议）。
  *
  * 注意：`fetch` 必须从 `undici` 包导入（而非全局 fetch）。全局 fetch 由 Node 内置的**另一份** undici 提供，
@@ -62,8 +64,17 @@ export async function createPinnedPublicDispatcher(rawUrl: string): Promise<{ ag
 }
 
 /**
+ * 跟随重定向时允许的最大跳数。RSS / 友链页常带 www ↔ 非 www、http → https、尾斜杠等规范化跳转，
+ * 5 跳足以覆盖常规场景；超过即视为死循环/可疑投毒。
+ */
+const MAX_REDIRECTS = 5;
+
+/**
  * 以钉定 IP 的方式 fetch 一个用户提供的 URL，并把完整的响应交给 `process` 消费（在响应体内读取前不关 Agent）。
- * 统一 `redirect:"error"`（30x 到内网会绕过外层校验）与 timeout；`process` 完成后自动关闭 Agent、清 timeout。
+ *
+ * 重定向策略：`redirect:"manual"`，**每跳重新走一次 SSRF 校验 + 重新钉定已校验 IP**（防 DNS rebinding），
+ * 这样既允许源站常规的 www / 协议 / 尾斜杠规范化跳转，又不会让 30x 把请求引到内网/云元数据。
+ * 跳数上限 MAX_REDIRECTS；跳链在调试日志里完整打印，便于排障。
  */
 export async function fetchPublicUrl<T>(
   rawUrl: string,
@@ -71,19 +82,56 @@ export async function fetchPublicUrl<T>(
   init: UndiciRequestInit = {},
   timeoutMs = 10000,
 ): Promise<T> {
-  const { agent, url } = await createPinnedPublicDispatcher(rawUrl);
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const response = await fetch(url.href, {
-      ...init,
-      redirect: "error",
-      signal: controller.signal,
-      dispatcher: agent,
-    });
-    return await process(response);
-  } finally {
-    clearTimeout(timeoutId);
-    await agent.close().catch(() => {});
+  let currentUrl: string = rawUrl;
+  let agent: Agent | null = null;
+
+  for (let hop = 0; ; hop++) {
+    const dispatcher = await createPinnedPublicDispatcher(currentUrl);
+    agent = dispatcher.agent;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch(dispatcher.url.href, {
+        ...init,
+        redirect: "manual",
+        signal: controller.signal,
+        dispatcher: agent,
+      });
+
+      // 命中 30x：仅取 [301,302,303,307,308] 这五个规范化跳转（308/307 保留方法、303 强制转 GET），
+      // 其余状态码视作非重定向，避免被站点用自定义 3xx 投毒
+      const status = response.status;
+      const location = response.headers.get("location");
+      if (status >= 300 && status < 400 && status !== 304 && location) {
+        if (hop >= MAX_REDIRECTS) {
+          throw new Error(`重定向超过 ${MAX_REDIRECTS} 跳，最后目标：${location}`);
+        }
+        // 相对路径 Location：相对当前 URL 解析；空 / 非 http(s) 协议一律拒绝
+        let nextUrl: string;
+        try {
+          nextUrl = new URL(location, dispatcher.url.href).href;
+        } catch {
+          throw new Error(`重定向 Location 非法: ${location}`);
+        }
+        const probe = new URL(nextUrl);
+        if (probe.protocol !== "http:" && probe.protocol !== "https:") {
+          throw new Error(`重定向到非 http(s) 协议: ${probe.protocol}`);
+        }
+        console.log(`[safe-fetch] 重定向 ${hop + 1}/${MAX_REDIRECTS}: ${dispatcher.url.href} -> ${nextUrl}`);
+        // 关闭当前 Agent（其内部连接池不再被引用），下一轮循环重新走 SSRF 校验 + IP 钉定
+        await agent.close().catch(() => {});
+        agent = null;
+        currentUrl = nextUrl;
+        continue;
+      }
+
+      return await process(response);
+    } finally {
+      clearTimeout(timeoutId);
+      if (agent) {
+        await agent.close().catch(() => {});
+        agent = null;
+      }
+    }
   }
 }

@@ -83,15 +83,13 @@ export async function fetchPublicUrl<T>(
   timeoutMs = 10000,
 ): Promise<T> {
   let currentUrl: string = rawUrl;
-  let agent: Agent | null = null;
 
   for (let hop = 0; ; hop++) {
-    const dispatcher = await createPinnedPublicDispatcher(currentUrl);
-    agent = dispatcher.agent;
+    const { agent, url } = await createPinnedPublicDispatcher(currentUrl);
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(dispatcher.url.href, {
+      const response = await fetch(url.href, {
         ...init,
         redirect: "manual",
         signal: controller.signal,
@@ -109,7 +107,7 @@ export async function fetchPublicUrl<T>(
         // 相对路径 Location：相对当前 URL 解析；空 / 非 http(s) 协议一律拒绝
         let nextUrl: string;
         try {
-          nextUrl = new URL(location, dispatcher.url.href).href;
+          nextUrl = new URL(location, url.href).href;
         } catch {
           throw new Error(`重定向 Location 非法: ${location}`);
         }
@@ -117,10 +115,7 @@ export async function fetchPublicUrl<T>(
         if (probe.protocol !== "http:" && probe.protocol !== "https:") {
           throw new Error(`重定向到非 http(s) 协议: ${probe.protocol}`);
         }
-        console.log(`[safe-fetch] 重定向 ${hop + 1}/${MAX_REDIRECTS}: ${dispatcher.url.href} -> ${nextUrl}`);
-        // 关闭当前 Agent（其内部连接池不再被引用），下一轮循环重新走 SSRF 校验 + IP 钉定
-        await agent.close().catch(() => {});
-        agent = null;
+        console.log(`[safe-fetch] 重定向 ${hop + 1}/${MAX_REDIRECTS}: ${url.href} -> ${nextUrl}`);
         currentUrl = nextUrl;
         continue;
       }
@@ -128,10 +123,8 @@ export async function fetchPublicUrl<T>(
       return await process(response);
     } finally {
       clearTimeout(timeoutId);
-      if (agent) {
-        await agent.close().catch(() => {});
-        agent = null;
-      }
+      // 关闭当前 Agent（其内部连接池不再被引用），下一轮循环重新走 SSRF 校验 + IP 钉定
+      await agent.close().catch(() => {});
     }
   }
 }

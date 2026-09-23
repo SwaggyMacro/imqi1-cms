@@ -16,7 +16,7 @@ function domainOf(url: string): string | null {
   }
 }
 
-export default defineEventHandler(async event => {
+export default defineEventHandler(async () => {
   try {
     const [links, subscribes] = await Promise.all([
       prisma.links.findMany({

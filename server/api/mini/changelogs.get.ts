@@ -2,7 +2,7 @@ import { prisma } from "#server/utils/prisma";
 import { parseChangelogContent } from "#server/utils/changelog";
 import type { MiniChangelogGroup, MiniChangelogsResponse } from "#server/types/apis/mini";
 
-export default defineEventHandler(async event => {
+export default defineEventHandler(async () => {
   try {
     // 与主站 /api/changelogs 同源，按时间倒序取全部更新日志
     const changelogs = await prisma.changelogs.findMany({

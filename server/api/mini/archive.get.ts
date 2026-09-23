@@ -12,7 +12,7 @@ function formatDay(value: Date) {
   return String(value.getDate()).padStart(2, "0");
 }
 
-export default defineEventHandler(async event => {
+export default defineEventHandler(async () => {
   try {
     const contents = await prisma.contents.findMany({
       where: {

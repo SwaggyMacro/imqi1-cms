@@ -5,7 +5,7 @@ import { siteConfig } from "~~/site.config";
 // 留言板即绑定到某篇文章的评论区，与主站 /api/messages/config 逻辑一致：
 // 优先取 informations.messageContentId，否则回退到 slug 为 "messages" 的文章。
 // 同时返回小程序评论开关，关闭时留言页与入口都不展示。
-export default defineEventHandler(async event => {
+export default defineEventHandler(async () => {
   const commentEnabled = siteConfig.features.miniComment;
 
   try {

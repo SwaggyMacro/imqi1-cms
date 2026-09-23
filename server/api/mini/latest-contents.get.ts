@@ -4,8 +4,6 @@ import { formatRelativeTime, getPhotoCategoryMid, toAbsoluteUrl } from "#server/
 import { prisma } from "#server/utils/prisma";
 
 export default defineEventHandler(async event => {
-  setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
-
   try {
     const photoCategoryMid = await getPhotoCategoryMid();
     const requestUrl = getRequestURL(event);

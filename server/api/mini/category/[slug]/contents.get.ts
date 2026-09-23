@@ -6,8 +6,6 @@ import { formatRelativeTime, toAbsoluteUrl } from "#server/utils/mini";
 import { prisma } from "#server/utils/prisma";
 
 export default defineEventHandler(async event => {
-  setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
-
   const categorySlug = getRouterParam(event, "slug");
   const query = getQuery(event);
 

@@ -3,8 +3,6 @@ import { parseChangelogContent } from "#server/utils/changelog";
 import type { MiniChangelogGroup, MiniChangelogsResponse } from "#server/types/apis/mini";
 
 export default defineEventHandler(async event => {
-  setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
-
   try {
     // 与主站 /api/changelogs 同源，按时间倒序取全部更新日志
     const changelogs = await prisma.changelogs.findMany({

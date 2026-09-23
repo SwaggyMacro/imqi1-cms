@@ -17,8 +17,6 @@ function domainOf(url: string): string | null {
 }
 
 export default defineEventHandler(async event => {
-  setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
-
   try {
     const [links, subscribes] = await Promise.all([
       prisma.links.findMany({

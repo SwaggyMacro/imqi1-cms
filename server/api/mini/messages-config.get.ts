@@ -6,8 +6,6 @@ import { siteConfig } from "~~/site.config";
 // 优先取 informations.messageContentId，否则回退到 slug 为 "messages" 的文章。
 // 同时返回小程序评论开关，关闭时留言页与入口都不展示。
 export default defineEventHandler(async event => {
-  setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
-
   const commentEnabled = siteConfig.features.miniComment;
 
   try {

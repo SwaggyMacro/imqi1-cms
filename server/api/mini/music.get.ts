@@ -77,8 +77,6 @@ async function resolveSong(
 }
 
 export default defineEventHandler(async event => {
-  setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
-
   const query = getQuery(event);
 
   // getQuery 对重复参数会返回数组，这里强制按字符串处理，缺省走后端默认。

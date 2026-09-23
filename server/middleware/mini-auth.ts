@@ -11,15 +11,21 @@ import { getMiniApiSecret, verifyMiniSignature } from "#server/utils/mini-auth";
  * CORS 预检（OPTIONS）不带签名头且由 [...].options.ts 单独处理，此处显式放行。
  */
 export default defineEventHandler(event => {
-  // 跳过开发环境
-  if (process.env.NODE_ENV === "development") {
-    return;
-  }
-
   const path = event.node.req.url;
 
   // 仅拦截小程序接口
   if (!path || (path !== "/api/mini" && !path.startsWith("/api/mini/"))) {
+    return;
+  }
+
+  // 小程序 API 默认不缓存：避免 CDN / 浏览器在 5 分钟窗口里继续返回旧数据。
+  // 主站后台改文章会触发 invalidateContentCaches 清掉主站页面 ISR，但**不**清
+  // 客户端 / CDN 的 HTTP 缓存；把 Cache-Control 直接置 no-store 后，每次请求都
+  // 回源到服务端拿到最新内容。POST 默认也不缓存，加这个头对它无副作用。
+  setHeader(event, "Cache-Control", "no-store, max-age=0, must-revalidate");
+
+  // 跳过开发环境
+  if (process.env.NODE_ENV === "development") {
     return;
   }
 

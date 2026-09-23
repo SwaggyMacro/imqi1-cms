@@ -4,8 +4,6 @@
 import type { MiniRepo, MiniRepoResponse, RepoApiData } from "#server/types/apis/mini";
 
 export default defineEventHandler(async event => {
-  setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
-
   const query = getQuery(event);
 
   // getQuery 对重复参数会返回数组，这里强制按字符串处理，避免数组/异常值触发 .trim() 抛错变成 500。

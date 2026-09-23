@@ -3,8 +3,6 @@ import { getPhotoCategoryMid, toAbsoluteUrl } from "#server/utils/mini";
 import { prisma } from "#server/utils/prisma";
 
 export default defineEventHandler(async event => {
-  setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
-
   try {
     const origin = getRequestURL(event).origin;
     const photoCategoryMid = await getPhotoCategoryMid();

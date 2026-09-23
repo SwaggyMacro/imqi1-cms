@@ -9,8 +9,6 @@ import { getSiteSettings } from "#server/utils/siteSettings";
 // 需在小程序合法域名白名单里加入所用镜像站域名（gravatar/cravatar/weavatar）。
 
 export default defineEventHandler(async event => {
-  setHeader(event, "Cache-Control", "public, max-age=300, s-maxage=300");
-
   // 小程序评论使用独立的构建期开关，不跟随主站后台评论开关。
   if (!siteConfig.features.miniComment) {
     return {
